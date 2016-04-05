@@ -10,5 +10,5 @@ Please read the contribution guide before contributing.
 
 ### TODO
 - [x] LDAP Integration
-- [ ] Works with Nginx auth module
+- [x] Works with Nginx auth_request_module
 - [ ] OAuth Provider

@@ -27,6 +27,8 @@ if (config('tusso.shutdown')) {
 		});
 		Route::get('logout', 'UIController@logout');
 
+		Route::get('proxy_auth', 'TUSSOController@proxyAuth');
+		
 		//DEBUGGING PURPOSE
 		if (config('app.debug')) {
 			Route::get('/view/{id}', function ($id) {
