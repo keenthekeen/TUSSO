@@ -23,14 +23,14 @@
             <div class="row margin">
                 <div class="input-field col s12">
                     <i class="mdi-social-person-outline prefix"></i>
-                    <input id="username" type="text" name="username" required/>
+                    <input id="username" type="text" name="username" class="validate{{ $errors->has('username') ? ' invalid' : '' }}" required  />
                     <label for="username" class="center-align">{{ trans('messages.username') }}</label>
                 </div>
             </div>
             <div class="row margin">
                 <div class="input-field col s12">
                     <i class="mdi-action-lock-outline prefix"></i>
-                    <input id="password" type="password" name="password"/>
+                    <input id="password" type="password" name="password" class="{{ $errors->has('password') ? 'validate invalid' : '' }}" />
                     <label for="password">{{ trans('messages.password') }}</label>
                 </div>
             </div>

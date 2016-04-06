@@ -25,20 +25,55 @@ class TUSSOController extends Controller {
 	|
 	*/
 	public function TryLogIn(Request $request) {
-		//$this->validate($request, ['username' => 'required', 'password' => 'string']);
+		$this->validate($request, ['username' => 'required', 'password' => 'required']);
 
-		if (Auth::attempt(['username' => $request->input('username'), 'password' => $request->input('password')], $request->has('remember'))) {
-			//$request->session()->put('userid', Auth::user()->username);
-			//$request->session()->put('name', Auth::user()->name);
+		try {
+			if (Auth::attempt(['username' => $request->input('username'), 'password' => $request->input('password')],
+				$request->has('remember'))
+			) {
+				if ($this->cleanUserInfo()) {
+					return redirect('/')->with('notify', trans('messages.loginsuccess'));
+				} else {
+					// User not registered as staff nor student, suspected as guest, denying access.
+					Auth::logout();
+					return redirect('/')->with('notify', trans('messages.userdenied'));
+				}
+			} else {
+				return redirect('/')->with('notify', trans('messages.loginfail'));
+			}
+		} finally {
+			Log::error('Authentication failed (probably caused by unreachable LDAP server)');
 
-			return redirect('/')->with('notify', trans('messages.loginsuccess'));
-		} else {
-			//return 'BAD';
-			return redirect('/')->with('notify', trans('messages.loginfail'));
+			return redirect('/')->with('notify', trans('messages.ldapfail'));
 		}
-		/*$search = Adldap::getProvider('default')->search()->where('userprincipalname', '=', $request->input('username'))->get();
-		$login = Adldap::getProvider('default')->auth()->attempt($request->input('username'), $request->input('password'));*/
 	}
+
+	/*
+	 * cleanUserInfo()
+	 *
+	 * generate user's information from LDAP data.
+	 */
+	public function cleanUserInfo() {
+		$user = Auth::user();
+
+		// User type
+		if (str_contains($user->group, 'Staffs')) {
+			$user->type = 'staff';
+		} elseif (str_contains($user->group, 'Students')) {
+			$user->type = 'student';
+		} else {
+			// Neither staff nor student, not allowed to authenticate
+			return false;
+		}
+
+		// Group
+		$grn = explode(',', $user->group, 2);
+		$user->group = str_replace('CN=', '', $grn[0]);
+
+		$user->save();
+		return true;
+	}
+
 
 	/*
 	 * proxyAuth()
@@ -49,12 +84,12 @@ class TUSSOController extends Controller {
 	 */
 	public function proxyAuth(Request $request) {
 		if (Auth::check()) {
-			// @todo Send back OAuth token, not real username
-			return response('AUTHENTICATED', 200)->header('X-Username', $request->user()->username);
+			// @todo Send back OAuth authorization token
+			return response('AUTHENTICATED', 200)->header('X-Username', 'OK');
 		} else {
 			return response('UNAUTHORIZED', 403)->header('X-Username', '');
 		}
 	}
-	
+
 
 }

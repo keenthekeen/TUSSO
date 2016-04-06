@@ -162,6 +162,9 @@ return [
 		Adldap\Laravel\AdldapServiceProvider::class,
 		Adldap\Laravel\AdldapAuthServiceProvider::class,
 
+		LucaDegasperi\OAuth2Server\Storage\FluentStorageServiceProvider::class,
+		LucaDegasperi\OAuth2Server\OAuth2ServerServiceProvider::class,
+
 	],
 
 	/*
@@ -208,7 +211,8 @@ return [
 		'Validator' => Illuminate\Support\Facades\Validator::class,
 		'View' => Illuminate\Support\Facades\View::class,
 
-		'Adldap' => Adldap\Laravel\Facades\Adldap::class
+		'Adldap' => Adldap\Laravel\Facades\Adldap::class,
+		'Authorizer' => LucaDegasperi\OAuth2Server\Facades\Authorizer::class,
 
 	],
 

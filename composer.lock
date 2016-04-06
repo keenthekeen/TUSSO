@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ead99fb0e2dd4d1bfb180c00093bdd51",
-    "content-hash": "6af93cf0dfc31d71f96ad1e8e7dc61bf",
+    "hash": "9e1bd8f343c5c69aacd9ba5bd261577a",
+    "content-hash": "5770c1abadf680e81bc43ca59ce1d70a",
     "packages": [
         {
             "name": "adldap2/adldap2",
@@ -99,50 +99,6 @@
                 "ldap"
             ],
             "time": "2016-04-02 20:39:53"
-        },
-        {
-            "name": "bogardo/mailgun",
-            "version": "4.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Bogardo/Mailgun.git",
-                "reference": "3bdb36558d84f0521358b339b57c3d8c45fbc469"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Bogardo/Mailgun/zipball/3bdb36558d84f0521358b339b57c3d8c45fbc469",
-                "reference": "3bdb36558d84f0521358b339b57c3d8c45fbc469",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/support": "5.*",
-                "mailgun/mailgun-php": "^1.8",
-                "nesbot/carbon": "^1.20",
-                "php": ">=5.5.9"
-            },
-            "type": "laravel-package",
-            "autoload": {
-                "psr-4": {
-                    "Bogardo\\Mailgun\\": "src/Bogardo/Mailgun/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Bogardo",
-                    "email": "chrisbogaards@gmail.com"
-                }
-            ],
-            "description": "A laravel 5 wrapper for sending mail via the Mailgun API in Laravel style",
-            "keywords": [
-                "laravel",
-                "mail",
-                "mailgun"
-            ],
-            "time": "2015-09-18 08:03:36"
         },
         {
             "name": "classpreloader/classpreloader",
@@ -297,165 +253,6 @@
                 "string"
             ],
             "time": "2015-11-06 14:35:42"
-        },
-        {
-            "name": "guzzlehttp/guzzle",
-            "version": "5.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "f3c8c22471cb55475105c14769644a49c3262b93"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/f3c8c22471cb55475105c14769644a49c3262b93",
-                "reference": "f3c8c22471cb55475105c14769644a49c3262b93",
-                "shasum": ""
-            },
-            "require": {
-                "guzzlehttp/ringphp": "^1.1",
-                "php": ">=5.4.0"
-            },
-            "require-dev": {
-                "ext-curl": "*",
-                "phpunit/phpunit": "^4.0",
-                "psr/log": "^1.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "5.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "GuzzleHttp\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Michael Dowling",
-                    "email": "mtdowling@gmail.com",
-                    "homepage": "https://github.com/mtdowling"
-                }
-            ],
-            "description": "Guzzle is a PHP HTTP client library and framework for building RESTful web service clients",
-            "homepage": "http://guzzlephp.org/",
-            "keywords": [
-                "client",
-                "curl",
-                "framework",
-                "http",
-                "http client",
-                "rest",
-                "web service"
-            ],
-            "time": "2015-05-20 03:47:55"
-        },
-        {
-            "name": "guzzlehttp/ringphp",
-            "version": "1.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/guzzle/RingPHP.git",
-                "reference": "dbbb91d7f6c191e5e405e900e3102ac7f261bc0b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/RingPHP/zipball/dbbb91d7f6c191e5e405e900e3102ac7f261bc0b",
-                "reference": "dbbb91d7f6c191e5e405e900e3102ac7f261bc0b",
-                "shasum": ""
-            },
-            "require": {
-                "guzzlehttp/streams": "~3.0",
-                "php": ">=5.4.0",
-                "react/promise": "~2.0"
-            },
-            "require-dev": {
-                "ext-curl": "*",
-                "phpunit/phpunit": "~4.0"
-            },
-            "suggest": {
-                "ext-curl": "Guzzle will use specific adapters if cURL is present"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.1-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "GuzzleHttp\\Ring\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Michael Dowling",
-                    "email": "mtdowling@gmail.com",
-                    "homepage": "https://github.com/mtdowling"
-                }
-            ],
-            "description": "Provides a simple API and specification that abstracts away the details of HTTP into a single PHP function.",
-            "time": "2015-05-20 03:37:09"
-        },
-        {
-            "name": "guzzlehttp/streams",
-            "version": "3.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/guzzle/streams.git",
-                "reference": "47aaa48e27dae43d39fc1cea0ccf0d84ac1a2ba5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/streams/zipball/47aaa48e27dae43d39fc1cea0ccf0d84ac1a2ba5",
-                "reference": "47aaa48e27dae43d39fc1cea0ccf0d84ac1a2ba5",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.4.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "~4.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "3.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "GuzzleHttp\\Stream\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Michael Dowling",
-                    "email": "mtdowling@gmail.com",
-                    "homepage": "https://github.com/mtdowling"
-                }
-            ],
-            "description": "Provides a simple abstraction over streams of data",
-            "homepage": "http://guzzlephp.org/",
-            "keywords": [
-                "Guzzle",
-                "stream"
-            ],
-            "time": "2014-10-12 19:18:40"
         },
         {
             "name": "jakub-onderka/php-console-color",
@@ -731,6 +528,56 @@
             "time": "2016-04-03 01:43:55"
         },
         {
+            "name": "league/event",
+            "version": "2.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/event.git",
+                "reference": "e4bfc88dbcb60c8d8a2939a71f9813e141bbe4cd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/event/zipball/e4bfc88dbcb60c8d8a2939a71f9813e141bbe4cd",
+                "reference": "e4bfc88dbcb60c8d8a2939a71f9813e141bbe4cd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "henrikbjorn/phpspec-code-coverage": "~1.0.1",
+                "phpspec/phpspec": "~2.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "League\\Event\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Frank de Jonge",
+                    "email": "info@frenky.net"
+                }
+            ],
+            "description": "Event package",
+            "keywords": [
+                "emitter",
+                "event",
+                "listener"
+            ],
+            "time": "2015-05-21 12:24:47"
+        },
+        {
             "name": "league/flysystem",
             "version": "1.0.20",
             "source": {
@@ -814,31 +661,36 @@
             "time": "2016-03-14 21:54:11"
         },
         {
-            "name": "mailgun/mailgun-php",
-            "version": "v1.8",
+            "name": "league/oauth2-server",
+            "version": "4.1.5",
             "source": {
                 "type": "git",
-                "url": "https://github.com/mailgun/mailgun-php.git",
-                "reference": "225e8005950027df22fc5f5b1ada58f4ad116d60"
+                "url": "https://github.com/thephpleague/oauth2-server.git",
+                "reference": "c5db707e694963f0ac86f1c3d7eb3b25c205ed17"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mailgun/mailgun-php/zipball/225e8005950027df22fc5f5b1ada58f4ad116d60",
-                "reference": "225e8005950027df22fc5f5b1ada58f4ad116d60",
+                "url": "https://api.github.com/repos/thephpleague/oauth2-server/zipball/c5db707e694963f0ac86f1c3d7eb3b25c205ed17",
+                "reference": "c5db707e694963f0ac86f1c3d7eb3b25c205ed17",
                 "shasum": ""
             },
             "require": {
-                "guzzlehttp/guzzle": "~5.0"
+                "league/event": "~2.1",
+                "php": ">=5.4.0",
+                "symfony/http-foundation": "~2.4|~3.0"
+            },
+            "replace": {
+                "league/oauth2server": "*",
+                "lncd/oauth2": "*"
             },
             "require-dev": {
-                "php": ">=5.4.0",
-                "phpunit/phpunit": "~4.6"
+                "mockery/mockery": "0.9.*",
+                "phpunit/phpunit": "4.3.*"
             },
             "type": "library",
             "autoload": {
-                "psr-0": {
-                    "Mailgun\\Tests": "tests/",
-                    "Mailgun": "src/"
+                "psr-4": {
+                    "League\\OAuth2\\Server\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -847,12 +699,97 @@
             ],
             "authors": [
                 {
-                    "name": "Travis Swientek",
-                    "email": "travis@mailgunhq.com"
+                    "name": "Alex Bilbie",
+                    "email": "hello@alexbilbie.com",
+                    "homepage": "http://www.alexbilbie.com",
+                    "role": "Developer"
                 }
             ],
-            "description": "The Mailgun SDK provides methods for all API functions.",
-            "time": "2015-05-06 17:52:51"
+            "description": "A lightweight and powerful OAuth 2.0 authorization and resource server library with support for all the core specification grants. This library will allow you to secure your API with OAuth and allow your applications users to approve apps that want to access their data from your API.",
+            "homepage": "http://oauth2.thephpleague.com/",
+            "keywords": [
+                "Authentication",
+                "api",
+                "auth",
+                "authorisation",
+                "authorization",
+                "oauth",
+                "oauth 2",
+                "oauth 2.0",
+                "oauth2",
+                "protect",
+                "resource",
+                "secure",
+                "server"
+            ],
+            "time": "2016-01-04 19:56:12"
+        },
+        {
+            "name": "lucadegasperi/oauth2-server-laravel",
+            "version": "5.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lucadegasperi/oauth2-server-laravel.git",
+                "reference": "c2ff4eab6d40d88768d626fb82c9ea8a9e417672"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/lucadegasperi/oauth2-server-laravel/zipball/c2ff4eab6d40d88768d626fb82c9ea8a9e417672",
+                "reference": "c2ff4eab6d40d88768d626fb82c9ea8a9e417672",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/config": "5.1.* || 5.2.*",
+                "illuminate/console": "5.1.* || 5.2.*",
+                "illuminate/contracts": "5.1.* || 5.2.*",
+                "illuminate/database": "5.1.* || 5.2.*",
+                "illuminate/http": "5.1.* || 5.2.*",
+                "illuminate/support": "5.1.* || 5.2.*",
+                "league/oauth2-server": "4.1.*",
+                "php": ">=5.5.9"
+            },
+            "require-dev": {
+                "henrikbjorn/phpspec-code-coverage": "^1.0",
+                "mockery/mockery": "^0.9.4",
+                "orchestra/testbench": "3.1.* || 3.2.*",
+                "phpspec/phpspec": "^2.2",
+                "phpunit/phpunit": "^4.8 || ^5.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LucaDegasperi\\OAuth2Server\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Luca Degasperi",
+                    "email": "packages@lucadegasperi.com"
+                },
+                {
+                    "name": "Vincent Klaiber",
+                    "email": "hello@vinkla.com"
+                }
+            ],
+            "description": "An OAuth 2.0 bridge for Laravel and Lumen",
+            "keywords": [
+                "api",
+                "laravel",
+                "lumen",
+                "oauth",
+                "oauth2",
+                "server"
+            ],
+            "time": "2016-01-29 13:11:59"
         },
         {
             "name": "monolog/monolog",
@@ -1231,50 +1168,6 @@
                 "shell"
             ],
             "time": "2016-03-09 05:03:14"
-        },
-        {
-            "name": "react/promise",
-            "version": "v2.4.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/reactphp/promise.git",
-                "reference": "f942da7b505d1a294284ab343d05df42d02ad6d9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise/zipball/f942da7b505d1a294284ab343d05df42d02ad6d9",
-                "reference": "f942da7b505d1a294284ab343d05df42d02ad6d9",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.4.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "React\\Promise\\": "src/"
-                },
-                "files": [
-                    "src/functions_include.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jan Sorgalla",
-                    "email": "jsorgalla@gmail.com"
-                }
-            ],
-            "description": "A lightweight implementation of CommonJS Promises/A for PHP",
-            "time": "2016-03-31 13:10:33"
         },
         {
             "name": "swiftmailer/swiftmailer",
