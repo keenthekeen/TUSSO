@@ -41,7 +41,7 @@ class TUSSOController extends Controller {
 			} else {
 				return redirect('/')->with('notify', trans('messages.loginfail'));
 			}
-		} finally {
+		} catch (\Exception $e) {
 			Log::error('Authentication failed (probably caused by unreachable LDAP server)');
 
 			return redirect('/')->with('notify', trans('messages.ldapfail'));

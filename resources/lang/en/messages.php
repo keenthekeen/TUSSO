@@ -19,5 +19,8 @@ return [
 	'loginsuccess' => 'Login success!',
 	'loginfail' => 'Login fail!',
 	'ldapfail' => 'Directory unreachable, please notify administrator.',
-	'userdenied' => "Access denied due to your account type."
+	'userdenied' => "Access denied due to your account type.",
+	'type' => 'Type',
+	'student' => 'Student',
+	'staff' => 'Staff',
 ];

@@ -67,13 +67,13 @@
     <nav class="orange" role="navigation">
         <div class="nav-wrapper container">
             <a id="logo-container" href="/" class="brand-logo">{{ trans('messages.name') }}</a>
-            <ul class="right hide-on-med-and-down">
+            <!-- ul class="right hide-on-med-and-down">
                 <li<?= isset($home) ? ' class="active"' : '' ?>><a href="/">{{ trans('messages.home') }}</a></li>
             </ul>
             <ul id="nav-mobile" class="side-nav">
                 <li<?= isset($home) ? ' class="active"' : '' ?>><a href="/">{{ trans('messages.home') }}</a></li>
             </ul>
-            <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+            <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a> -->
         </div>
     </nav>
 @show
@@ -89,7 +89,7 @@
                 {{ trans('messages.organization') }} | {{ trans('messages.copyright') }} | <a href="/switch_lang">{{ trans('messages.switchlang') }}</a>
                 <?php
                     $uicontroller = new \App\Http\Controllers\UIController();
-                if ($uicontroller->isLoggedIn()) echo ' | <a href="/logout" class="white-text">'.trans('messages.logout').'</a>';
+                if ($uicontroller->isLoggedIn()) echo ' | <a href="/logout">'.trans('messages.logout').'</a>';
                 ?>
             </div>
         </div>
