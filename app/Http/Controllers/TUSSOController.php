@@ -34,7 +34,12 @@ class TUSSOController extends Controller {
 				$request->has('remember'))
 			) {
 				if ($this->cleanUserInfo()) {
-					return redirect('/')->with('notify', trans('messages.loginsuccess'));
+
+					if ($request->session()->has('simple_auth_queue')) {
+						return redirect('simple_auth?application='.$request->session()->get('simple_auth_queue'))->with('notify', trans('messages.loginsuccess'));
+					} else {
+						return redirect('/')->with('notify', trans('messages.loginsuccess'));
+					}
 				} else {
 					// User not registered as staff nor student, suspected as guest, denying access.
 					Auth::logout();
@@ -126,6 +131,7 @@ class TUSSOController extends Controller {
 		}
 
 		if (Auth::check()) {
+			$request->session()->forget('simple_auth_queue');
 			$user = $request->user();
 			$goto = DB::table('oauth_client_endpoints')->where('client_id',
 				$request->input('application'))->first()->redirect_uri;
