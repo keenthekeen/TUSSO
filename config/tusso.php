@@ -1,15 +1,6 @@
 <?php
-// Project Mu Configuration file
+// TUSSO Configuration file
 return [
-	/*
-	|--------------------------------------------------------------------------
-	| Domain name
-	|--------------------------------------------------------------------------
-	| The email's domain name, for example, "student.triamudom.ac.th"
-	| (Can be different to site's url)
-	|
-	*/
-	'domain' => 'mu.keendev.net',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -21,17 +12,6 @@ return [
 	*/
 	'shutdown' => false,
 
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Administrator accounts
-	|--------------------------------------------------------------------------
-	|
-	| The users that are allowed to access backend. (Hard-coded)
-	|
-	*/
-	'admin-account' => array('s00000'),
 
 	
 ];

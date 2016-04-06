@@ -39,7 +39,7 @@ class UIController extends Controller {
 
 	public function logout() {
 		Auth::logout();
-		return redirect('/')->with('notify', 'ออกจากระบบแล้ว');
+		return redirect('/')->with('notify', trans('messages.loggedout'));
 	}
 
 	public function debugSession (Request $request) {

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use DB;
 use Log;
 use Auth;
+use LucaDegasperi\OAuth2Server\Facades\Authorizer;
 
 class TUSSOController extends Controller {
 	/*
@@ -53,7 +54,7 @@ class TUSSOController extends Controller {
 	 *
 	 * generate user's information from LDAP data.
 	 */
-	public function cleanUserInfo() {
+	private function cleanUserInfo() {
 		$user = Auth::user();
 
 		// User type
@@ -84,11 +85,26 @@ class TUSSOController extends Controller {
 	 */
 	public function proxyAuth(Request $request) {
 		if (Auth::check()) {
-			// @todo Send back OAuth authorization token
-			return response('AUTHENTICATED', 200)->header('X-Username', 'OK');
+			return response('AUTHENTICATED', 200)->header('X-AccessRight', 'GRANTED');
 		} else {
-			return response('UNAUTHORIZED', 403)->header('X-Username', '');
+			return response('UNAUTHORIZED', 403)->header('X-AccessRight', '');
 		}
+	}
+
+	/*
+	 * authUserData()
+	 *
+	 * a route handler OAuth application called asking for user's information.
+	 */
+	public function authUserInfo() {
+		$userid = Authorizer::getResourceOwnerId();
+		$user = \App\User::find($userid);
+		return response()->json(array(
+			'id' => $user->username,
+			'name' => $user->name,
+			'type' => $user->type,
+			'group' => $user->group
+		));
 	}
 
 

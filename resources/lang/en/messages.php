@@ -23,4 +23,8 @@ return [
 	'type' => 'Type',
 	'student' => 'Student',
 	'staff' => 'Staff',
+	'accessprompt' => 'has requested permission to access your information',
+	'loggedout' => 'Logged out!',
+	'redirectingtoapp' => 'Redirecting to application...',
+	'go' => 'Go',
 ];

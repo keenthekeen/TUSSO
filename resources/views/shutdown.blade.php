@@ -1,12 +1,11 @@
 <!doctype html>
 <html>
 <head>
-    <title>Triamudom Student Postmaster</title>
+    <title>System Shutdown - Triamudom Central Authentication Service</title>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="theme-color" content="#e91e63"/>
+    <meta name="theme-color" content="#ff9800"/>
     <meta name="csrf-token" content=""/>
-    <!-- link rel="manifest" href="/manifest.json"/ -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
     <style>
@@ -39,18 +38,9 @@
         .brand-logo {
             font-size: 1.5rem !important
         }
-
-        .orange {
-            background-color: #e91e63 !important
-        }
-        .orange-text {
-            color: #e91e63 !important
-        }
-
         .footer-copyright a {
             color: lightgrey;
         }
-
         .footer-copyright a:hover {
             text-decoration: underline
         }
@@ -65,8 +55,8 @@
 <body class="orange">
 <main class="orange white-text" style="padding-top:10vh;padding-bottom:10vh">
     <div class="container">
-        <h1>ระบบจัดการอีเมลนักเรียน<br/>โรงเรียนเตรียมอุดมศึกษา</h1>
-        <h2>Triamudom Student Postmaster</h2>
+        <h1>ระบบยืนยันตัวตนกลาง<br/>โรงเรียนเตรียมอุดมศึกษา</h1>
+        <h2>Triamudom Central Authentication Service</h2>
         <br /><br /><br />
         <div style="max-width:500px;font-size:1.5rem;border-radius:1vh;padding:1.5vh;margin:auto" class="white black-text center-align" id="dtext">
             ระบบปิด
@@ -78,7 +68,7 @@
     </div>
 </main>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 <script>
     $(function() {
         var t1 = false;
