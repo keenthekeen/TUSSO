@@ -18,11 +18,11 @@
             <div class="col s12 m3 center-align">
                 {{-- place user profile photo here --}}
                 <i class="large material-icons">perm_identity</i><br />
-                <h5>{{ $user->username }}</h5>
+                <h5 class="en">{{ strtoupper($user->username) }}</h5>
             </div>
             <div class="col s12 m9">
                 <h4>{{ $user->name }}</h4>
-                {{ trans('messages.type') }}: {{ ($user->type == 'student') ? trans('messages.student') : trans('messages.staff') }} <i>({{ $user->group }})</i>
+                {{ trans('messages.type') }}: {{ ($user->type == 'student') ? trans('messages.student') : trans('messages.staff') }} <i class="en">({{ $user->group }})</i>
             </div>
         </div>
     </div>

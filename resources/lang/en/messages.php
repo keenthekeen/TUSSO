@@ -27,4 +27,5 @@ return [
 	'loggedout' => 'Logged out!',
 	'redirectingtoapp' => 'Redirecting to application...',
 	'go' => 'Go',
+	'simple_auth_input' => 'The application has sent incorrect parameters',
 ];

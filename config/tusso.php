@@ -12,6 +12,13 @@ return [
 	*/
 	'shutdown' => false,
 
+	/*
+	 * --------------------------------------------------------------------------
+	 * Encryption intrinsic factor
+	 * --------------------------------------------------------------------------
+	 * Must be exact length at 16 characters.
+	 */
+	'aes_ivfactor' => 'TriamudomSSOProV',
 
 	
 ];

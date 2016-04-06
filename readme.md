@@ -8,7 +8,13 @@ Development Status: Bf-Nightly
 Please read the contribution guide before contributing.
 
 
-### TODO
+### Features
 - [x] LDAP Integration
-- [x] Works with Nginx auth_request_module
-- [ ] OAuth Provider
+- [x] Nginx Auth module
+- [x] Simple authentication
+- [x] OAuth
+
+##### Simple Authentication
+1. Application send user to /simple_auth?application=APP_ID
+2. If user hasn't logged in, show login dialog.
+3. Send user back to application with "userinfo" app-secret-encrypted-JSON

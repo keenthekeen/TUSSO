@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use DB;
 use Log;
 use Auth;
+use Validator;
 use LucaDegasperi\OAuth2Server\Facades\Authorizer;
 
 class TUSSOController extends Controller {
@@ -37,6 +38,7 @@ class TUSSOController extends Controller {
 				} else {
 					// User not registered as staff nor student, suspected as guest, denying access.
 					Auth::logout();
+
 					return redirect('/')->with('notify', trans('messages.userdenied'));
 				}
 			} else {
@@ -72,6 +74,7 @@ class TUSSOController extends Controller {
 		$user->group = str_replace('CN=', '', $grn[0]);
 
 		$user->save();
+
 		return true;
 	}
 
@@ -99,12 +102,51 @@ class TUSSOController extends Controller {
 	public function authUserInfo() {
 		$userid = Authorizer::getResourceOwnerId();
 		$user = \App\User::find($userid);
+
 		return response()->json(array(
 			'id' => $user->username,
 			'name' => $user->name,
 			'type' => $user->type,
 			'group' => $user->group
 		));
+	}
+
+	/*
+	 * simpleAuth()
+	 *
+	 * forward user to application with encrypted user's info in JSON
+	 * @input [GET] application (application id)
+	 */
+	public function simpleAuth(Request $request) {
+		$validator = Validator::make($request->all(), [
+			'application' => 'required|max:255',
+		]);
+		if ($validator->fails()) {
+			return redirect('/')->with('notify', trans('messages.simple_auth_input'));
+		}
+
+		if (Auth::check()) {
+			$user = $request->user();
+			$goto = DB::table('oauth_client_endpoints')->where('client_id',
+				$request->input('application'))->first()->redirect_uri;
+			$encKey = DB::table('oauth_clients')->where('id', $request->input('application'))->first()->secret;
+
+			$userdata = json_encode(array(
+				'id' => $user->username,
+				'name' => $user->name,
+				'type' => $user->type,
+				'group' => $user->group,
+				'timestamp' => time(),
+				'random' => rand(1,99)
+			));
+			$serialized = openssl_encrypt($userdata, 'AES128', $encKey, 0, config('tusso.aes_ivfactor'));
+
+			return view('auth-forward', ['goto' => $goto, 'serialized' => $serialized]);
+		} else {
+			$request->session()->put('simple_auth_queue', $request->input('application'));
+
+			return redirect('/login')->with('notify', trans('messages.pleaselogin'));
+		}
 	}
 
 

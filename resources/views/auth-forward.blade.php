@@ -12,17 +12,21 @@
 @section('content')
     <div class="z-depth-1 card-panel" style="max-width:800px;margin: 3rem auto auto;">
         <div class="row">
-            <i class="large material-icons">fingerprint</i><br/>
-        </div>
-        <div class="col s12 m9">
-            <h4>{{ trans('messages.redirectingtoapp') }}</h4>
-            <form method="post" action="{{ $goto }}">
-                <input type="hidden" name="client_id" value="{{ $serialized }}">
-                <div class="row">
-                    <button type="submit" name="approve" value="1"
-                            class="btn waves-effect waves-light blue col s12">{{ trans('messages.go') }}</button>
-                </div>
-            </form>
+            <div class="col s12 m3 center-align">
+                <br />
+                <i class="large material-icons">fingerprint</i><br/>
+            </div>
+            <div class="col s12 m9">
+                <h4>{{ trans('messages.redirectingtoapp') }}</h4>
+                {{ $goto }}<br /><br />
+                <form method="post" action="{{ $goto }}" id="postRedir">
+                    <input type="hidden" name="userinfo" value="{{ $serialized }}">
+                    <div class="row">
+                        <button type="submit" name="approve" value="1"
+                                class="btn waves-effect waves-light blue col s12">{{ trans('messages.go') }}</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 @endsection
@@ -30,6 +34,10 @@
 @section('script')
     @parent
     <script>
-
+        $(function () {
+            setTimeout(function () {
+                $('#postRedir').submit();
+            }, 1000);
+        });
     </script>
 @endsection
