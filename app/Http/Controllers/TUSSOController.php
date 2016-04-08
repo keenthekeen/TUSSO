@@ -78,6 +78,8 @@ class TUSSOController extends Controller {
 		$grn = explode(',', $user->group, 2);
 		$user->group = str_replace('CN=', '', $grn[0]);
 
+		// @todo Use staff's Thai name, not English.
+
 		$user->save();
 
 		return true;
