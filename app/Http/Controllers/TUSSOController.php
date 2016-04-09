@@ -7,7 +7,6 @@ use DB;
 use Log;
 use Auth;
 use Validator;
-use LucaDegasperi\OAuth2Server\Facades\Authorizer;
 
 class TUSSOController extends Controller {
 	/*

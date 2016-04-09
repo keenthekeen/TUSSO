@@ -15,10 +15,7 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/jakub-onderka/php-console-highlighter" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/jeremeamia/SuperClosure" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/framework" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/league/event" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/league/flysystem" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/league/oauth2-server" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/lucadegasperi/oauth2-server-laravel" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/mockery/mockery" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/monolog/monolog" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/mtdowling/cron-expression" />
@@ -80,10 +77,7 @@
           <root url="file://$MODULE_DIR$/vendor/jakub-onderka/php-console-highlighter" />
           <root url="file://$MODULE_DIR$/vendor/jeremeamia/SuperClosure" />
           <root url="file://$MODULE_DIR$/vendor/laravel/framework" />
-          <root url="file://$MODULE_DIR$/vendor/league/event" />
           <root url="file://$MODULE_DIR$/vendor/league/flysystem" />
-          <root url="file://$MODULE_DIR$/vendor/league/oauth2-server" />
-          <root url="file://$MODULE_DIR$/vendor/lucadegasperi/oauth2-server-laravel" />
           <root url="file://$MODULE_DIR$/vendor/mockery/mockery" />
           <root url="file://$MODULE_DIR$/vendor/monolog/monolog" />
           <root url="file://$MODULE_DIR$/vendor/mtdowling/cron-expression" />
@@ -141,10 +135,7 @@
           <root url="file://$MODULE_DIR$/vendor/jakub-onderka/php-console-highlighter" />
           <root url="file://$MODULE_DIR$/vendor/jeremeamia/SuperClosure" />
           <root url="file://$MODULE_DIR$/vendor/laravel/framework" />
-          <root url="file://$MODULE_DIR$/vendor/league/event" />
           <root url="file://$MODULE_DIR$/vendor/league/flysystem" />
-          <root url="file://$MODULE_DIR$/vendor/league/oauth2-server" />
-          <root url="file://$MODULE_DIR$/vendor/lucadegasperi/oauth2-server-laravel" />
           <root url="file://$MODULE_DIR$/vendor/mockery/mockery" />
           <root url="file://$MODULE_DIR$/vendor/monolog/monolog" />
           <root url="file://$MODULE_DIR$/vendor/mtdowling/cron-expression" />
