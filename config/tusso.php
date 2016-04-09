@@ -2,6 +2,15 @@
 // TUSSO Configuration file
 return [
 
+	/*--------------------------------------------------------------------------
+	 * Application location
+	 * --------------------------------------------------------------------------
+	 * with no trailing slash
+	 * example: https://sso.triamudom.ac.th
+	 */
+	'url' => 'http://localhost',
+
+
 	/*
 	|--------------------------------------------------------------------------
 	| Shutdown switch
@@ -14,7 +23,7 @@ return [
 
 	/*
 	 * --------------------------------------------------------------------------
-	 * Encryption intrinsic factor
+	 * Encryption initialization factor
 	 * --------------------------------------------------------------------------
 	 * Must be exact length at 16 characters.
 	 */

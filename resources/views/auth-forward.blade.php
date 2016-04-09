@@ -20,7 +20,11 @@
                 <h4>{{ trans('messages.redirectingtoapp') }}</h4>
                 {{ $goto }}<br /><br />
                 <form method="post" action="{{ $goto }}" id="postRedir">
-                    <input type="hidden" name="userinfo" value="{{ $serialized }}">
+                    <?php
+                    foreach ($data as $name => $value) {
+                        echo '<input type="hidden" name="'.$name.'" value="'.$value.'" />';
+                    }
+                    ?>
                     <div class="row">
                         <button type="submit" name="approve" value="1"
                                 class="btn waves-effect waves-light blue col s12">{{ trans('messages.go') }}</button>

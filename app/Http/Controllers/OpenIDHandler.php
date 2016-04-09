@@ -7,6 +7,7 @@ use DB;
 use Log;
 use Auth;
 use Validator;
+use Lcobucci\JWT\Builder;
 
 class OpenIDHandler extends Controller {
 	/*
@@ -37,7 +38,7 @@ class OpenIDHandler extends Controller {
 	 * If using the HTTP POST method, the request parameters are serialized using Form Serialization, per Section 13.2.
 	 */
 
-	public function AuthRequest (Request $request) {
+	public function AuthRequest(Request $request) {
 		// OpenID Connect uses the following OAuth 2.0 request parameters with the Authorization Code Flow:
 		$validator = Validator::make($request->all(), [
 			/* scope
@@ -148,11 +149,12 @@ class OpenIDHandler extends Controller {
 			Auth::logout();
 		} elseif ($request->input('prompt', 'NULL') == 'none' && !Auth::check()) {
 			// Client wants us not to prompt user to authenticate.
-			return redirect($request->input('redirect_uri').'?error=login_required');
+			return redirect($request->input('redirect_uri') . '?error=login_required');
 		} elseif (!Auth::check()) {
 			// User not authenticated.
 			// After logged in, makes the user redirected back here again.
 			$request->session()->put('redirect_queue', $request->fullUrl());
+
 			return redirect('/login')->with('notify', trans('messages.pleaselogin'));
 		}
 
@@ -165,5 +167,38 @@ class OpenIDHandler extends Controller {
 		 *
 		 * WORK IN PROGRESS
 		 */
+
+		$user = $request->user();
+		if ($request->input('response_type', 'NULL') == 'code') {
+			$data = array(
+				'code' => '@todo Generate access token here',
+				'state' => $request->input('state', '')
+			);
+		} elseif ($request->input('response_type', 'NULL') == 'id_token') {
+			$signer = new Sha256();
+			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
+			->setAudience('http://example.org')// Configures the audience (aud claim)
+			->setId('TUSSO' . substr(md5($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
+				true)// Configures the id (jti claim), replicating as a header item
+			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
+			->setNotBefore(time() + 1)// Configures the time that the token can be used (nbf claim)
+			->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
+			->set('id', $user->username)// Configures a new claim, called "uid"
+			->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
+				$request->input('nonce', ''))
+				->sign($signer, '@todo APP_SECRET HERE')// creates a signature
+				->getToken(); // Retrieves the generated token
+
+			
+			$data = array(
+				'id_token' => $token,
+				'state' => $request->input('state', ''),
+				'expires_in' => 3600
+			);
+		} else {
+			return 'NOT_IMPLEMENTED_RESPONSE_TYPE';
+		}
+		
+		return view('auth-forward', ['goto' => $request->input('redirect_uri'), 'data' => $data]);
 	}
 }
