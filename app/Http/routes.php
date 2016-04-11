@@ -42,6 +42,7 @@ if (config('tusso.shutdown')) {
 			Route::get('session', 'UIController@debugSession');
 		}
 
+		Route::any('openid/request', 'OpenIDHandler@AuthRequest');
 	});
 
 	Route::group(['middleware' => ['web', 'auth']], function () {
@@ -49,10 +50,5 @@ if (config('tusso.shutdown')) {
 			return view('home');
 		});
 	});
-
-	/*
-	 * OpenID Provider Routes
-	 */
-
 
 }

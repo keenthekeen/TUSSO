@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use DB;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Log;
 use Auth;
 use Validator;
@@ -124,11 +124,20 @@ class OpenIDHandler extends Controller {
 		]);
 
 		if ($validator->fails()) {
-			// @todo Display user-friendly error page.
-			return 'AUTHENTICATION_REQUEST_MALFORMED';
+			return view('auth-error', ['error' => 'AUTHENTICATION_REQUEST_MALFORMED']);
 		}
 
-		// @todo Verify if redirect_uri exactly matches our data of client_id.
+		if ($app = \App\Application::find($request->input('client_id'))) {
+			if ($allowed_uri = explode(',', $app->redirect_uri)) {
+				if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
+					return view('auth-error', ['error' => 'NOT_ALLOWED_REDIRECT_URI']);
+				}
+			} else {
+				return view('auth-error', ['error' => 'MISCONFIGURED_CLIENT']);
+			}
+		} else {
+			return view('auth-error', ['error' => 'CLIENT_ID_NOT_FOUND']);
+		}
 
 		/* Step 3: Authorization Server Authenticates End-User
 		 *
@@ -168,6 +177,7 @@ class OpenIDHandler extends Controller {
 		 * WORK IN PROGRESS
 		 */
 
+		$request->session()->forget('redirect_queue');
 		$user = $request->user();
 		if ($request->input('response_type', 'NULL') == 'code') {
 			$data = array(
@@ -177,7 +187,7 @@ class OpenIDHandler extends Controller {
 		} elseif ($request->input('response_type', 'NULL') == 'id_token') {
 			$signer = new Sha256();
 			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
-			->setAudience('http://example.org')// Configures the audience (aud claim)
+			->setAudience('http://' . $app->name)// Configures the audience (aud claim)
 			->setId('TUSSO' . substr(md5($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
 				true)// Configures the id (jti claim), replicating as a header item
 			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
@@ -185,8 +195,7 @@ class OpenIDHandler extends Controller {
 			->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
 			->set('id', $user->username)// Configures a new claim, called "uid"
 			->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
-				$request->input('nonce', ''))
-				->sign($signer, '@todo APP_SECRET HERE')// creates a signature
+				$request->input('nonce', ''))->sign($signer, $app->secret)// creates a signature
 				->getToken(); // Retrieves the generated token
 
 			
@@ -196,7 +205,7 @@ class OpenIDHandler extends Controller {
 				'expires_in' => 3600
 			);
 		} else {
-			return 'NOT_IMPLEMENTED_RESPONSE_TYPE';
+			return view('auth-error', ['error' => 'NOT_IMPLEMENTED_RESPONSE_TYPE']);
 		}
 		
 		return view('auth-forward', ['goto' => $request->input('redirect_uri'), 'data' => $data]);

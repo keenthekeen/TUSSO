@@ -35,7 +35,10 @@ class TUSSOController extends Controller {
 				if ($this->cleanUserInfo()) {
 
 					if ($request->session()->has('simple_auth_queue')) {
-						return redirect('simple_auth?application='.$request->session()->get('simple_auth_queue'))->with('notify', trans('messages.loginsuccess'));
+						return redirect('simple_auth?application=' . $request->session()->get('simple_auth_queue'))->with('notify',
+							trans('messages.loginsuccess'));
+					} else if ($request->session()->has('redirect_queue')) {
+						return redirect($request->session()->get('redirect_queue'));
 					} else {
 						return redirect('/')->with('notify', trans('messages.loginsuccess'));
 					}
@@ -148,7 +151,7 @@ class TUSSOController extends Controller {
 			));
 			$serialized = openssl_encrypt($userdata, 'AES128', $encKey, 0, config('tusso.aes_ivfactor'));
 
-			return view('auth-forward', ['goto' => $goto, 'serialized' => $serialized]);
+			return view('auth-forward', ['goto' => $goto, 'data' => [ 'userinfo' => $serialized]]);
 		} else {
 			$request->session()->put('simple_auth_queue', $request->input('application'));
 

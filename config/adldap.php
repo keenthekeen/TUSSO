@@ -116,7 +116,7 @@ return [
                 |
                 */
 
-                'domain_controllers' => ['dc.triamudom.ac.th'],
+                'domain_controllers' => [env('ADLDAP_ADDRESS', 'dc.triamudom.ac.th')],
 
                 /*
                 |--------------------------------------------------------------------------

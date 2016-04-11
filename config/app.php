@@ -162,6 +162,9 @@ return [
 		Adldap\Laravel\AdldapServiceProvider::class,
 		Adldap\Laravel\AdldapAuthServiceProvider::class,
 
+		// IDE Helper, helps our code works with IDE nicely.
+		Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
+
 	],
 
 	/*
