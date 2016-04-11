@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use DB;
 use Log;
 use Auth;
-use Validator;
 
 class TUSSOController extends Controller {
 	/*
@@ -92,7 +90,7 @@ class TUSSOController extends Controller {
 	 *
 	 * @return HTTP Status 200 with X-Username header or 403
 	 */
-	public function proxyAuth(Request $request) {
+	public function proxyAuth() {
 		if (Auth::check()) {
 			return response('AUTHENTICATED', 200)->header('X-AccessRight', 'GRANTED');
 		} else {

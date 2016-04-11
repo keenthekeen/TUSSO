@@ -2,20 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Application;
+use App\User;
 use Illuminate\Http\Request;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Crypt;
 use Auth;
+use Storage;
 use Validator;
 use Lcobucci\JWT\Builder;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Lcobucci\JWT\ValidationData;
+use Lcobucci\JWT\Parser;
 
-class OpenIDHandler extends Controller {
+class ProviderController extends Controller {
 	/*
 	 * OpenID Connect 1.0 Provider
 	 *
+	 * Currently supports only implicit (id_token) flow
+	 *
 	 * Referenced from http://openid.net/specs/openid-connect-core-1_0.html
 	 * Created by Siwat Techavoranant
+	 *
+	 * CAUTION: The code designed to work with client and server that supports TLS.
 	 */
 
 
@@ -125,10 +134,10 @@ class OpenIDHandler extends Controller {
 		]);
 
 		if ($validator->fails()) {
-			return view('auth-error', ['error' => 'AUTHENTICATION_REQUEST_MALFORMED']);
+			return view('auth-error', ['error' => 'MALFORMED_AUTHENTICATION_REQUEST']);
 		}
 
-		if ($app = \App\Application::find($request->input('client_id'))) {
+		if ($app = Application::find($request->input('client_id'))) {
 			if ($allowed_uri = explode(',', $app->redirect_uri)) {
 				if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
 					return view('auth-error', ['error' => 'NOT_ALLOWED_REDIRECT_URI']);
@@ -173,9 +182,8 @@ class OpenIDHandler extends Controller {
 		 * We allowed only trusted client to access our api, so let's skip this.
 		 */
 
-		/* Step 5: Successful Authentication Response
-		 *
-		 * WORK IN PROGRESS
+		/*
+		 * Step 5: Successful Authentication Response
 		 */
 
 		$request->session()->forget('redirect_queue');
@@ -184,14 +192,12 @@ class OpenIDHandler extends Controller {
 
 			//Create authorization token.
 			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
-			->setAudience('http://' . $app->name)// Configures the audience (aud claim)
 			->setId('TUSSO-AUTHCODE-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
 				true)// Configures the id (jti claim), replicating as a header item
 			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
-			->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
 			->setExpiration(time() + 900)// Configures the expiration time of the token (exp claim)
-			->set('user', $user->username)
-			->getToken(); // Retrieves the generated token
+			->set('user', $user->username)->set('client_id',
+				$request->input('client_id'))->getToken(); // Retrieves the generated token
 			
 			$data = array(
 				'code' => $this->encrypt($token),
@@ -200,20 +206,9 @@ class OpenIDHandler extends Controller {
 		} elseif ($request->input('response_type', 'NULL') == 'id_token') {
 
 			//Create JWT ID token, containing user's basic info, signed with app secret.
-			$signer = new Sha256();
-			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
-			->setAudience('http://' . $app->name)// Configures the audience (aud claim)
-			->setId('TUSSO-ID-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
-				true)// Configures the id (jti claim), replicating as a header item
-			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
-			->setNotBefore(time() + 1)// Configures the time that the token can be used (nbf claim)
-			->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
-			->set('id', $user->username)// Configures a new claim, called "uid"
-			->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
-				$request->input('nonce', ''))->sign($signer, $app->secret)// creates a signature
-				->getToken(); // Retrieves the generated token
+			$token = $this->createIDToken($user, $app, $request->input('nonce', ''));
 
-			
+			// We send user's info to client in JWT, which is not encrypted, so using of TLS is highly recommended and avoid sensitive data being sent.
 			$data = array(
 				'id_token' => $token,
 				'state' => $request->input('state', ''),
@@ -227,11 +222,116 @@ class OpenIDHandler extends Controller {
 	}
 
 
+	/*
+	 * Section 3.1.3.
+	 * Token Endpoint
+	 */
+	public function tokenRequest(Request $request) {
+
+		$validator = Validator::make($request->all(), [
+			'grant_type' => 'required|in:authorization_code',
+			'code' => 'required',
+			'redirect_uri' => 'required|url'
+		]);
+		if ($validator->fails()) {
+			return response()->json(['error' => 'invalid_request', 'error_description' => 'Request malformed'], 400);
+		}
+
+		// Get client secret
+		if ($request->has('client_id') && $request->has('client_secret')) {
+			// "client_secret_post" (including the Client Credentials in the request body)
+			$client_id = $request->input('client_id');
+			$client_secret = $request->input('client_secret');
+		} else {
+			$headers = apache_request_headers();
+			if (array_key_exists('Authorization', $headers)) {
+				// "client_secret_basic" (using of the HTTP Basic authentication scheme)
+				// Header must be formed as urlencode(urlencode(CLIENT_ID).':'.urlencode(CLIENT_SECRET)) (same as Twitter's)
+				$clientAuthHeader = explode(' ', trim($headers['Authorization']));
+				$client_credential = explode(':', $clientAuthHeader[1]);
+				$client_id = urldecode($client_credential[0]);
+				$client_secret = urldecode($client_credential[1]);
+			} else {
+				return response()->json([
+					'error' => 'invalid_client',
+					'error_description' => 'No client credential found'
+				], 401);
+			}
+		}
+
+		// Authenticate client
+		if ($client = Application::find($client_id)) {
+			if ($client->secret != $client_secret) {
+				return response()->json([
+					'error' => 'invalid_client',
+					'error_description' => 'Invalid client credential'
+				], 400);
+			} elseif ($allowed_uri = explode(',', $client->redirect_uri)) {
+				if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
+					return response()->json([
+						'error' => 'invalid_client',
+						'error_description' => 'Invalid redirect uri'
+					], 400);
+				}
+			} else {
+				return response()->json(['error' => 'invalid_client', 'error_description' => 'Misconfigured client'],
+					400);
+			}
+		} else {
+			return response()->json(['error' => 'invalid_client', 'error_description' => 'Client not found'], 400);
+		}
+
+		// Parse & validate JWT
+		$token = (new Parser())->parse((string)$this->decrypt($request->input('code')));
+		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
+		$vdata->setIssuer(config('tusso.url'));
+		if (!$token->validate($vdata)) {
+			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Invalid authorization code'],
+				400);
+		} elseif ($token->getClaim('client_id') != $client_id) {
+			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Stolen authorization code'],
+				400);
+		}
+
+		//If possible, verify that the Authorization Code has not been previously used.
+
+		// Now, client is authenticated and token is valid.
+		if (!$user = User::find($token->get('user'))) {
+			// User not found, nearly impossible to happens.
+			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Invalid authorization code'],
+				400);
+		}
+
+		return response()->json([
+			'access_token' => $this->issueAccessToken($client->name, explode(',', $client->scope)),
+			'token_type' => 'Bearer',
+			'expires_in' => 3600,
+			'id_token' => $this->createIDToken($user, $client)
+		]);
+	}
+
 
 	/*
-	 * SUPPORTIVE FUNCTION
+	 * SUPPORTIVE FUNCTIONS
 	 * the following methods shouldn't be called directly from outside.
 	 */
+
+	private function createIDToken($user, $app, $nonce = '') {
+		//Create JWT ID token, containing user's basic info, signed with app secret.
+		$signer = new Sha256();
+		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
+		->setAudience('https://' . $app->name)// Configures the audience (aud claim)
+		->setId('TUSSO-ID-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
+			true)// Configures the id (jti claim), replicating as a header item
+		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
+		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
+		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
+		->set('id', $user->username)// Configures a new claim, called "uid"
+		->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
+			$nonce)->sign($signer, $app->secret)// creates a signature
+		->getToken(); // Retrieves the generated token
+		return $token;
+	}
 
 	private function encrypt($secret) {
 		// Encrypt using OpenSSL and the AES-256-CBC cipher, signed with MAC.
@@ -244,6 +344,31 @@ class OpenIDHandler extends Controller {
 		} catch (DecryptException $e) {
 			$decrypted = false;
 		}
+
 		return $decrypted;
+	}
+
+	/*
+	 * issueAccessToken()
+	 *
+	 * issues an access token to resource server
+	 * @param String $appname
+	 * @param Array $appscope
+	 */
+	private function issueAccessToken($appname, $appscope) {
+		//Create JWT access token, grant access to all user.
+		$signer = new \Lcobucci\JWT\Signer\Rsa\Sha256();
+		$privateKey = new \Lcobucci\JWT\Signer\Key(Storage::get('private.key'));
+
+		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
+		->setAudience('https://' . $appname)// Configures the audience (aud claim)
+		->setId('TUSSO-AT-' . sha1($appname . microtime() . rand(10, 99)),
+			true)// Configures the id (jti claim), replicating as a header item
+		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
+		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
+		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
+		->set('client', $appname)// Configures a new claim
+		->set('scope', $appscope)->sign($signer, $privateKey)->getToken(); // Retrieves the generated token
+		return $token;
 	}
 }

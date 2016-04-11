@@ -11,8 +11,9 @@
 */
 
 if (config('tusso.shutdown')) {
-	Route::any('{catchall}', function ($page) {
-		return view('shutdown');
+	Route::any('{catchall}', function () {
+		// Return 503 Service Unavailable
+		return response(view('shutdown'), '503');
 	})->where('catchall', '(.*)');
 } else {
 
@@ -21,7 +22,12 @@ if (config('tusso.shutdown')) {
 
 		Route::get('/', 'UIController@home');
 		Route::get('switch_lang', 'UIController@switchLanguage');
-		Route::post('login', 'TUSSOController@TryLogIn');
+
+		Route::group(['middleware' => 'throttle:15,5'], function () {
+			//Prevents brute-force attack
+			Route::post('login', 'TUSSOController@TryLogIn');
+		});
+
 		Route::get('login', function () {
 			return view('login');
 		});
@@ -35,19 +41,25 @@ if (config('tusso.shutdown')) {
 				if (!empty($id) && view()->exists($id)) {
 					return view($id);
 				} else {
-					return abort(404);
+					abort(404);
+					return 'Not Found';
 				}
 			});
 			Route::get('session', 'UIController@debugSession');
 		}
 
-		Route::any('openid/request', 'OpenIDHandler@AuthRequest');
+		Route::any('openid/authorize', 'ProviderController@AuthRequest');
 	});
 
 	Route::group(['middleware' => ['web', 'auth']], function () {
 		Route::get('account', function () {
 			return view('home');
 		});
+	});
+
+	Route::group(['middleware' => ['api']], function () {
+		// Limit to only POST request, according to OpenID Connect Core 1.0 Specification.
+		Route::post('openid/token', 'ProviderController@tokenRequest');
 	});
 
 }

@@ -30,6 +30,7 @@ return [
 	'aes_ivfactor' => 'TriamudomSSOProV',
 
 	/* CAUTION!
-	 * This app utilize laravel's encryption key configuration (APP_KEY)
+	 * - This app utilize laravel's encryption key configuration (APP_KEY), secure and random encryption key is required.
+	 * 
 	 */
 ];
