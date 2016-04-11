@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
-use Log;
+use Crypt;
 use Auth;
 use Validator;
 use Lcobucci\JWT\Builder;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class OpenIDHandler extends Controller {
 	/*
@@ -180,15 +181,29 @@ class OpenIDHandler extends Controller {
 		$request->session()->forget('redirect_queue');
 		$user = $request->user();
 		if ($request->input('response_type', 'NULL') == 'code') {
+
+			//Create authorization token.
+			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
+			->setAudience('http://' . $app->name)// Configures the audience (aud claim)
+			->setId('TUSSO-AUTHCODE-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
+				true)// Configures the id (jti claim), replicating as a header item
+			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
+			->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
+			->setExpiration(time() + 900)// Configures the expiration time of the token (exp claim)
+			->set('user', $user->username)
+			->getToken(); // Retrieves the generated token
+			
 			$data = array(
-				'code' => '@todo Generate access token here',
+				'code' => $this->encrypt($token),
 				'state' => $request->input('state', '')
 			);
 		} elseif ($request->input('response_type', 'NULL') == 'id_token') {
+
+			//Create JWT ID token, containing user's basic info, signed with app secret.
 			$signer = new Sha256();
 			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
 			->setAudience('http://' . $app->name)// Configures the audience (aud claim)
-			->setId('TUSSO' . substr(md5($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
+			->setId('TUSSO-ID-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
 				true)// Configures the id (jti claim), replicating as a header item
 			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 			->setNotBefore(time() + 1)// Configures the time that the token can be used (nbf claim)
@@ -209,5 +224,26 @@ class OpenIDHandler extends Controller {
 		}
 		
 		return view('auth-forward', ['goto' => $request->input('redirect_uri'), 'data' => $data]);
+	}
+
+
+
+	/*
+	 * SUPPORTIVE FUNCTION
+	 * the following methods shouldn't be called directly from outside.
+	 */
+
+	private function encrypt($secret) {
+		// Encrypt using OpenSSL and the AES-256-CBC cipher, signed with MAC.
+		return Crypt::encrypt($secret);
+	}
+
+	private function decrypt($alien) {
+		try {
+			$decrypted = Crypt::decrypt($alien);
+		} catch (DecryptException $e) {
+			$decrypted = false;
+		}
+		return $decrypted;
 	}
 }
