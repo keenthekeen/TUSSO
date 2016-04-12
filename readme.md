@@ -12,4 +12,5 @@ Please read the contribution guide before contributing.
 - [x] LDAP Integration
 - [x] Nginx Auth module
 - [x] OpenID Connect Implicit flow
-- [ ] OpenID Connect Authorization Code flow
+- [x] OpenID Connect Authorization Code flow
+- [x] Access token issuing
