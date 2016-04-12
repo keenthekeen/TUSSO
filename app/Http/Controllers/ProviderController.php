@@ -244,7 +244,7 @@ class ProviderController extends Controller {
 			$client_id = $request->input('client_id');
 			$client_secret = $request->input('client_secret');
 		} else {
-			$headers = apache_request_headers();
+			$headers = apache_request_headers(); // Don't worry, this function also works with FastCGI in PHP5.4+
 			if (array_key_exists('Authorization', $headers)) {
 				// "client_secret_basic" (using of the HTTP Basic authentication scheme)
 				// Header must be formed as urlencode(urlencode(CLIENT_ID).':'.urlencode(CLIENT_SECRET)) (same as Twitter's)
@@ -283,11 +283,14 @@ class ProviderController extends Controller {
 		}
 
 		// Parse & validate JWT
-		$token = (new Parser())->parse((string)$this->decrypt($request->input('code')));
+		if (! $dec = $this->decrypt($request->input('code'))) {
+			return response()->json(['error' => 'invalid_client', 'error_description' => 'Invalid authorization code'], 400);
+		}
+		$token = (new Parser())->parse((string) $dec);
 		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
 		$vdata->setIssuer(config('tusso.url'));
 		if (!$token->validate($vdata)) {
-			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Invalid authorization code'],
+			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Expired authorization code'],
 				400);
 		} elseif ($token->getClaim('client_id') != $client_id) {
 			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Stolen authorization code'],
