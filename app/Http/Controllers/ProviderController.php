@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Crypt;
 use Auth;
+use Log;
 use Storage;
 use Validator;
 use Lcobucci\JWT\Builder;
@@ -283,10 +284,11 @@ class ProviderController extends Controller {
 		}
 
 		// Parse & validate JWT
-		if (! $dec = $this->decrypt($request->input('code'))) {
-			return response()->json(['error' => 'invalid_client', 'error_description' => 'Invalid authorization code'], 400);
+		if (!$dec = $this->decrypt($request->input('code'))) {
+			return response()->json(['error' => 'invalid_client', 'error_description' => 'Invalid authorization code'],
+				400);
 		}
-		$token = (new Parser())->parse((string) $dec);
+		$token = (new Parser())->parse((string)$dec);
 		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
 		$vdata->setIssuer(config('tusso.url'));
 		if (!$token->validate($vdata)) {
@@ -305,6 +307,7 @@ class ProviderController extends Controller {
 			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Invalid authorization code'],
 				400);
 		}
+		Log::info('Access token has been issued during OpenID auth flow for ' . $client->name . ' (' . $request->ip() . ')');
 
 		return response()->json([
 			'access_token' => $this->issueAccessToken($client->name, explode(',', $client->scope)),
@@ -317,8 +320,8 @@ class ProviderController extends Controller {
 	public function publishConfig() {
 		return response()->json(array(
 			'issuer' => config('tusso.url'),
-			'authorization_endpoint' => config('tusso.url').'/openid/authorize',
-			'token_endpoint' => config('tusso.url').'/openid/token',
+			'authorization_endpoint' => config('tusso.url') . '/openid/authorize',
+			'token_endpoint' => config('tusso.url') . '/openid/token',
 			'response_types_supported' => ['code', 'id_token'],
 			'grant_types_supported' => ["authorization_code", "implicit"],
 			'claims_supported' => ['id', 'name', 'type', 'group'],
@@ -349,11 +352,10 @@ class ProviderController extends Controller {
 			true)// Configures the id (jti claim), replicating as a header item
 		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
-		->setExpiration(time() + 90) // To prevent replay attack, but not using database, use fast expiration time, which may break in slow connection.
-		->set('client', $appname)
-		->set('challenge', sha1(microtime() . rand(). rand(0,999999)))
-		->sign($signer, config('app.key'))// creates a signature
-		->getToken(); // Retrieves the generated token
+		->setExpiration(time() + 90)// To prevent replay attack, but not using database, use fast expiration time, which may break in slow connection.
+		->set('client', $appname)->set('challenge', sha1(microtime() . rand() . rand(0, 999999)))->sign($signer,
+				config('app.key'))// creates a signature
+			->getToken(); // Retrieves the generated token
 
 		return $token;
 	}
@@ -370,7 +372,7 @@ class ProviderController extends Controller {
 		}
 
 		// Parse & validate JWT
-		$token = (new Parser())->parse((string) $request->input('challenge'));
+		$token = (new Parser())->parse((string)$request->input('challenge'));
 		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
 		$vdata->setIssuer(config('tusso.url'));
 		$signer = new Sha256();
@@ -382,16 +384,19 @@ class ProviderController extends Controller {
 
 		// Get client info
 		if ($client = Application::find(trim($token->getClaim('client')))) {
-			if (hash('sha256',trim($request->input('challenge')).$client->secret) != trim($request->input('response'))) {
-				return response('INVALID_RESPONSE ('.hash('sha256',trim($request->input('challenge')).$client->secret).')', 400);
+			if (hash('sha256',
+					trim($request->input('challenge')) . $client->secret) != trim($request->input('response'))
+			) {
+				return response('INVALID_RESPONSE (' . hash('sha256',
+						trim($request->input('challenge')) . $client->secret) . ')', 400);
 			}
 		} else {
 			return response('NON_EXISTENT_CLIENT', 400);
 		}
-		
+		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ')');
+
 		return $this->issueAccessToken($client->name, explode(',', $client->scope));
 	}
-
 
 
 	/*

@@ -31,6 +31,7 @@ class TUSSOController extends Controller {
 				$request->has('remember'))
 			) {
 				if ($this->cleanUserInfo()) {
+					Log::info(Auth::user()->username . ' logged in from ' . $request->ip());
 
 					if ($request->session()->has('redirect_queue')) {
 						return redirect($request->session()->get('redirect_queue'));
@@ -40,6 +41,7 @@ class TUSSOController extends Controller {
 				} else {
 					// User not registered as staff nor student, suspected as guest, denying access.
 					Auth::logout();
+					Log::notice(Auth::user()->username . ' tried to log in from ' . $request->ip() . ' but cannot determine user type');
 
 					return redirect('/')->with('notify', trans('messages.userdenied'));
 				}
