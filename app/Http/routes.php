@@ -59,6 +59,7 @@ if (config('tusso.shutdown')) {
 	});
 
 	Route::group(['middleware' => ['api']], function () {
+		Route::get('.well-known/openid-configuration', 'ProviderController@publishConfig');
 		// Limit to only POST request, according to OpenID Connect Core 1.0 Specification.
 		Route::post('openid/token', 'ProviderController@tokenRequest');
 

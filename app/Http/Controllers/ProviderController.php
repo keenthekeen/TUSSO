@@ -23,6 +23,7 @@ class ProviderController extends Controller {
 	 *
 	 * Referenced from http://openid.net/specs/openid-connect-core-1_0.html
 	 * Created by Siwat Techavoranant
+	 * Configuration published via OpenID Connect Discovery 1.0 specification
 	 *
 	 * CAUTION: The code designed to work with TLS, or we will experience a vulnerability.
 	 */
@@ -308,6 +309,18 @@ class ProviderController extends Controller {
 			'expires_in' => 3600,
 			'id_token' => $this->createIDToken($user, $client)
 		]);
+	}
+
+	public function publishConfig() {
+		return response()->json(array(
+			'issuer' => config('tusso.url'),
+			'authorization_endpoint' => config('tusso.url').'/openid/authorize',
+			'token_endpoint' => config('tusso.url').'/openid/token',
+			'response_types_supported' => ['code', 'id_token'],
+			'grant_types_supported' => ["authorization_code", "implicit"],
+			'claims_supported' => ['id', 'name', 'type', 'group'],
+			'ui_locales_supported' => ['th', 'en']
+		));
 	}
 
 

@@ -44,7 +44,7 @@ class UIController extends Controller {
 
 	public function debugSession (Request $request) {
 		dump(session()->all());
-		return dump($request->user());
+		dump($request->user());
 	}
 
 }
