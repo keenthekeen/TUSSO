@@ -10,6 +10,7 @@
 |
 */
 
+// This app must use TLS to prevent vulnerability
 if (config('tusso.shutdown')) {
 	Route::any('{catchall}', function () {
 		// Return 503 Service Unavailable
@@ -60,6 +61,9 @@ if (config('tusso.shutdown')) {
 	Route::group(['middleware' => ['api']], function () {
 		// Limit to only POST request, according to OpenID Connect Core 1.0 Specification.
 		Route::post('openid/token', 'ProviderController@tokenRequest');
+
+		Route::any('access/challenge', 'ProviderController@getChallenge');
+		Route::post('access/token', 'ProviderController@verifyResponse');
 	});
 
 }

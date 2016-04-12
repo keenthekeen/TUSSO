@@ -19,12 +19,12 @@ class ProviderController extends Controller {
 	/*
 	 * OpenID Connect 1.0 Provider
 	 *
-	 * Currently supports only implicit (id_token) flow
+	 * Currently supports authorization code (code) and implicit (id_token) flow
 	 *
 	 * Referenced from http://openid.net/specs/openid-connect-core-1_0.html
 	 * Created by Siwat Techavoranant
 	 *
-	 * CAUTION: The code designed to work with client and server that supports TLS.
+	 * CAUTION: The code designed to work with TLS, or we will experience a vulnerability.
 	 */
 
 
@@ -312,6 +312,73 @@ class ProviderController extends Controller {
 
 
 	/*
+	 * ACCESS TOKEN RETRIEVING FLOW
+	 * the following methods will be called during access token issuing process.
+	 */
+
+	/*
+	 * getChallenge()
+	 *
+	 * send back a random challenge.
+	 * input: [GET/POST] client_id
+	 */
+	public function getChallenge(Request $request) {
+		if (!$request->has('client_id')) {
+			return response('MALFORMED_REQUEST', 400);
+		}
+		$appname = $request->input('client_id');
+		$signer = new Sha256();
+		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
+		->setId('TUSSO-ATREQ-' . substr(sha1($appname . microtime() . rand()), 0, 10) . rand(10, 99),
+			true)// Configures the id (jti claim), replicating as a header item
+		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
+		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
+		->setExpiration(time() + 90) // To prevent replay attack, but not using database, use fast expiration time, which may break in slow connection.
+		->set('client', $appname)
+		->set('challenge', sha1(microtime() . rand(). rand(0,999999)))
+		->sign($signer, config('app.key'))// creates a signature
+		->getToken(); // Retrieves the generated token
+
+		return $token;
+	}
+
+	/*
+	 * verifyResponse()
+	 *
+	 * after client hash/sign the challenge, we verify the response and issue an access token.
+	 * input: [POST] Challenge, Response (SHA256 of challenge appended by client key)
+	 */
+	public function verifyResponse(Request $request) {
+		if (!$request->has('challenge') || !$request->has('response')) {
+			return response('MALFORMED_REQUEST', 400);
+		}
+
+		// Parse & validate JWT
+		$token = (new Parser())->parse((string) $request->input('challenge'));
+		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
+		$vdata->setIssuer(config('tusso.url'));
+		$signer = new Sha256();
+		if (!$token->validate($vdata)) {
+			return response('INVALID_CHALLENGE', 400);
+		} elseif (!$token->verify($signer, config('app.key'))) {
+			return response('MODIFIED_CHALLENGE', 400);
+		}
+
+		// Get client info
+		if ($client = Application::find(trim($token->getClaim('client')))) {
+			if (hash('sha256',trim($request->input('challenge')).$client->secret) != trim($request->input('response'))) {
+				return response('INVALID_RESPONSE ('.hash('sha256',trim($request->input('challenge')).$client->secret).')', 400);
+			}
+		} else {
+			return response('NON_EXISTENT_CLIENT', 400);
+		}
+		
+		return $this->issueAccessToken($client->name, explode(',', $client->scope));
+	}
+
+
+
+	/*
 	 * SUPPORTIVE FUNCTIONS
 	 * the following methods shouldn't be called directly from outside.
 	 */
@@ -326,7 +393,7 @@ class ProviderController extends Controller {
 		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
 		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
-		->set('id', $user->username)// Configures a new claim, called "uid"
+		->set('id', $user->username)// Configures a new claim
 		->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
 			$nonce)->sign($signer, $app->secret)// creates a signature
 		->getToken(); // Retrieves the generated token
@@ -351,7 +418,7 @@ class ProviderController extends Controller {
 	/*
 	 * issueAccessToken()
 	 *
-	 * issues an access token to resource server
+	 * issues an access token, enabling client to access resource server.
 	 * @param String $appname
 	 * @param Array $appscope
 	 */

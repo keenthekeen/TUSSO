@@ -32,12 +32,12 @@
                 <div class="input-field col s12">
                     <i class="mdi-action-lock-outline prefix"></i>
                     <input id="password" type="password" name="password"
-                           class="{{ $errors->has('password') ? 'validate invalid' : '' }}"/>
+                           class="{{ $errors->has('password') ? 'validate invalid' : '' }}" required />
                     <label for="password">{{ trans('messages.password') }}</label>
                 </div>
             </div>
             <div class="center-align">
-                <input type="checkbox" id="rem" name="remember" value="true"/>
+                <input type="checkbox" id="rem" name="remember" value="true" />
                 <label for="rem">{{ trans('messages.remember') }}</label>
             </div>
             <div class="row">
