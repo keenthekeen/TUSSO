@@ -64,7 +64,7 @@ class TUSSOController extends Controller {
 		$user = Auth::user();
 
 		// User type
-		if (str_contains($user->group, 'Staffs')) {
+		if (str_contains($user->group, 'Staffs') || str_contains($user->group, 'Domain Admins')) {
 			$user->type = 'staff';
 		} elseif (str_contains($user->group, 'Students')) {
 			$user->type = 'student';
