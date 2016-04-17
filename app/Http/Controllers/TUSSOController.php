@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Adldap\Laravel\Facades\Adldap;
 use Illuminate\Http\Request;
 use Log;
 use Auth;
@@ -27,6 +28,7 @@ class TUSSOController extends Controller {
 		$this->validate($request, ['username' => 'required', 'password' => 'required']);
 
 		try {
+			\Adldap::connect('default');
 			if (Auth::attempt(['username' => $request->input('username'), 'password' => $request->input('password')],
 				$request->has('remember'))
 			) {
