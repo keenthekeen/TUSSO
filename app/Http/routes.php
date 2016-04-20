@@ -20,7 +20,6 @@ if (config('tusso.shutdown')) {
 
 	Route::group(['middleware' => ['web']], function () { //Apply session, CSRF protection, and cookies encryption.
 
-
 		Route::get('/', 'UIController@home');
 		Route::get('switch_lang', 'UIController@switchLanguage');
 
@@ -35,6 +34,7 @@ if (config('tusso.shutdown')) {
 		Route::get('logout', 'UIController@logout');
 
 		Route::get('proxy_auth', 'TUSSOController@proxyAuth');
+		Route::get('logout/remote', 'ProviderController@RemoteLogout');
 
 		//DEBUGGING PURPOSE
 		if (config('app.debug')) {
@@ -43,6 +43,7 @@ if (config('tusso.shutdown')) {
 					return view($id);
 				} else {
 					abort(404);
+
 					return 'Not Found';
 				}
 			});

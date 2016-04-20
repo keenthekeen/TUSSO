@@ -26,7 +26,7 @@ class ProviderController extends Controller {
 	 * Created by Siwat Techavoranant
 	 * Configuration published via OpenID Connect Discovery 1.0 specification
 	 *
-	 * CAUTION: The code designed to work with TLS, or we will experience a vulnerability.
+	 * CAUTION: The code designed to work with TLS, so this service and all applications MUST be available in HTTPS.
 	 */
 
 
@@ -354,8 +354,8 @@ class ProviderController extends Controller {
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
 		->setExpiration(time() + 90)// To prevent replay attack, but not using database, use fast expiration time, which may break in slow connection.
 		->set('client', $appname)->set('challenge', sha1(microtime() . rand() . rand(0, 999999)))->sign($signer,
-				config('app.key'))// creates a signature
-			->getToken(); // Retrieves the generated token
+			config('app.key'))// creates a signature
+		->getToken(); // Retrieves the generated token
 
 		return $token;
 	}
@@ -396,6 +396,23 @@ class ProviderController extends Controller {
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ')');
 
 		return $this->issueAccessToken($client->name, explode(',', $client->scope));
+	}
+
+	public function RemoteLogout(Request $request) {
+		$validator = Validator::make($request->all(), [
+			'client_id' => 'required'
+		]);
+
+		if ($validator->fails()) {
+			return view('auth-error', ['error' => 'MALFORMED_LOGOUT_REQUEST']);
+		}
+
+		if (!$app = Application::find($request->input('client_id'))) {
+			return view('auth-error', ['error' => 'CLIENT_ID_NOT_FOUND']);
+		}
+		Auth::logout();
+
+		return redirect('https://' . $app->name . '?tusso=loggedout');
 	}
 
 
