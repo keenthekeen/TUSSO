@@ -17,7 +17,10 @@
             </div>
             <div class="col s12 m9">
                 <h4>{{ trans('messages.redirectingtoapp') }}</h4>
-                {{ $goto }}<br /><br />
+                <?php
+                $parse = parse_url($goto);
+                echo $parse['host'];
+                ?><br /><br />
                 <form method="post" action="{{ $goto }}" id="postRedir">
                     <?php
                     foreach ($data as $name => $value) {

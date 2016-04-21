@@ -171,12 +171,13 @@ class ProviderController extends Controller {
 		} elseif ($request->input('prompt', 'NULL') == 'none' && !Auth::check()) {
 			// Client wants us not to prompt user to authenticate.
 			return redirect($request->input('redirect_uri') . '?error=login_required');
-		} elseif (!Auth::check()) {
+		}
+		if (!Auth::check()) {
 			// User not authenticated.
 			// After logged in, makes the user redirected back here again.
-			$request->session()->put('redirect_queue', $request->fullUrl());
+			//$request->session()->put('redirect_queue', $request->fullUrl());
 
-			return redirect('/login')->with('notify', trans('messages.pleaselogin'));
+			return redirect('/login')->with('notify', trans('messages.pleaselogin'))->with('redirect_queue', $request->fullUrl());
 		}
 
 		/* Step 4: Authorization Server Obtains End-User Consent/Authorization
@@ -187,8 +188,7 @@ class ProviderController extends Controller {
 		/*
 		 * Step 5: Successful Authentication Response
 		 */
-
-		$request->session()->forget('redirect_queue');
+		
 		$user = $request->user();
 		if ($request->input('response_type', 'NULL') == 'code') {
 

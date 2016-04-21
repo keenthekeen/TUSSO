@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Adldap\Laravel\Facades\Adldap;
+use App\User;
 use Illuminate\Http\Request;
+use Hash;
 use Log;
 use Auth;
 
@@ -13,7 +14,7 @@ class TUSSOController extends Controller {
 	| The TUSSO I/O Handler
 	|--------------------------------------------------------------------------
 	*/
-
+	
 	/*
 	| TryLogIn()
 	|
@@ -26,7 +27,7 @@ class TUSSOController extends Controller {
 	*/
 	public function TryLogIn(Request $request) {
 		$this->validate($request, ['username' => 'required', 'password' => 'required']);
-
+		
 		try {
 			\Adldap::connect('default');
 			if (Auth::attempt(['username' => $request->input('username'), 'password' => $request->input('password')],
@@ -35,8 +36,12 @@ class TUSSOController extends Controller {
 				if ($this->cleanUserInfo()) {
 					Log::info(Auth::user()->username . ' logged in from ' . $request->ip());
 
-					if ($request->session()->has('redirect_queue')) {
-						return redirect($request->session()->get('redirect_queue'));
+					if ($request->has('redirect_queue')) {
+						return redirect($request->input('redirect_queue'));
+					} elseif ($request->session()->has('redirect_queue')) {
+						$redirect = $request->session()->get('redirect_queue');
+						$request->session()->forget('redirect_queue');
+						return redirect($redirect);
 					} else {
 						return redirect('/')->with('notify', trans('messages.loginsuccess'));
 					}
@@ -44,19 +49,37 @@ class TUSSOController extends Controller {
 					// User not registered as staff nor student, suspected as guest, denying access.
 					Auth::logout();
 					Log::notice(Auth::user()->username . ' tried to log in from ' . $request->ip() . ' but cannot determine user type');
-
+					
 					return redirect('/')->with('notify', trans('messages.userdenied'));
 				}
 			} else {
 				return redirect('/')->with('notify', trans('messages.loginfail'));
 			}
 		} catch (\Exception $e) {
+			if ($user = User::find($request->input('username'))) {
+				if (Hash::check($request->input('password'), $user->password)) {
+					if (Auth::loginUsingId($user->username)) {
+						Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . $request->ip());
+						
+						if ($request->has('redirect_queue')) {
+							return redirect($request->input('redirect_queue'));
+						} elseif ($request->session()->has('redirect_queue')) {
+							$redirect = $request->session()->get('redirect_queue');
+							$request->session()->forget('redirect_queue');
+							return redirect($redirect);
+						} else {
+							return redirect('/')->with('notify', trans('messages.loginsuccess'));
+						}
+					}
+				}
+			}
+			
 			Log::error('Authentication failed (probably caused by unreachable LDAP server)');
-
+			
 			return redirect('/')->with('notify', trans('messages.ldapfail'));
 		}
 	}
-
+	
 	/*
 	 * cleanUserInfo()
 	 *
@@ -64,7 +87,7 @@ class TUSSOController extends Controller {
 	 */
 	private function cleanUserInfo() {
 		$user = Auth::user();
-
+		
 		// User type
 		if (str_contains($user->group, 'Staffs') || str_contains($user->group, 'Domain Admins')) {
 			$user->type = 'staff';
@@ -74,19 +97,19 @@ class TUSSOController extends Controller {
 			// Neither staff nor student, not allowed to authenticate
 			return false;
 		}
-
+		
 		// Group
 		$grn = explode(',', $user->group, 2);
 		$user->group = str_replace('CN=', '', $grn[0]);
-
+		
 		// @todo Use staff's Thai name, not English.
-
+		
 		$user->save();
-
+		
 		return true;
 	}
-
-
+	
+	
 	/*
 	 * proxyAuth()
 	 *
@@ -101,6 +124,6 @@ class TUSSOController extends Controller {
 			return response('UNAUTHORIZED', 403)->header('X-AccessRight', '');
 		}
 	}
-
-
+	
+	
 }

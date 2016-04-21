@@ -15,6 +15,7 @@
     <div class="z-depth-1 card-panel" style="max-width:550px;margin:auto">
         <form class="login-form" method="POST" action="/login">
             <input type="hidden" name="_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="redirect_queue" value="{{ empty($redirect) ? session()->get('redirect_queue', '') : $redirect }}"/>
             <div class="row">
                 <div class="input-field col s12 center">
                     <h4 class="center login-form-text">{{ trans('messages.pleaselogin') }}</h4>
