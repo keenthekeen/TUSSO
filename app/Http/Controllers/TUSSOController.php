@@ -27,59 +27,76 @@ class TUSSOController extends Controller {
 	*/
 	public function TryLogIn(Request $request) {
 		$this->validate($request, ['username' => 'required', 'password' => 'required']);
-		
-		try {
-			\Adldap::connect('default');
-			if (Auth::attempt(['username' => $request->input('username'), 'password' => $request->input('password')],
-				$request->has('remember'))
-			) {
-				if ($this->cleanUserInfo()) {
-					Log::info(Auth::user()->username . ' logged in from ' . $request->ip());
 
-					if ($request->has('redirect_queue')) {
-						return redirect($request->input('redirect_queue'));
-					} elseif ($request->session()->has('redirect_queue')) {
-						$redirect = $request->session()->get('redirect_queue');
-						$request->session()->forget('redirect_queue');
-						return redirect($redirect);
+		if (config('tusso.use_ldap')) {
+			try {
+				\Adldap::connect('default');
+				if (Auth::attempt([
+					'username' => $request->input('username'),
+					'password' => $request->input('password')
+				], $request->has('remember'))
+				) {
+					if ($this->cleanUserInfo()) {
+						Log::info(Auth::user()->username . ' logged in from ' . $request->ip());
+
+						return $this->finishedLogin($request);
 					} else {
-						return redirect('/')->with('notify', trans('messages.loginsuccess'));
+						// User not registered as staff nor student, suspected as guest, denying access.
+						Auth::logout();
+						Log::notice(Auth::user()->username . ' tried to log in from ' . $request->ip() . ' but cannot determine user type');
+
+						//return redirect('/')->with('notify', trans('messages.userdenied'));
+						return view('auth-error', ['error' => trans('messages.userdenied')]);
 					}
 				} else {
-					// User not registered as staff nor student, suspected as guest, denying access.
-					Auth::logout();
-					Log::notice(Auth::user()->username . ' tried to log in from ' . $request->ip() . ' but cannot determine user type');
-					
-					return redirect('/')->with('notify', trans('messages.userdenied'));
+					return redirect('/login')->with('error_message', trans('messages.loginfail'));
 				}
+			} catch (\Exception $e) {
+				if ($this->manualLogin($request->username, $request->password, $request)) {
+					return $this->finishedLogin($request);
+				} else {
+
+					Log::error('Authentication failed (probably caused by unreachable LDAP server)');
+
+					return redirect('/login')->with('error_message', trans('messages.ldapfail'));
+				}
+			}
+		} else {
+			if ($this->manualLogin($request->username, $request->password, $request)) {
+				return $this->finishedLogin($request);
 			} else {
-				return redirect('/')->with('notify', trans('messages.loginfail'));
+				return redirect('/login')->with('error_message', trans('messages.ldapofffail'));
 			}
-		} catch (\Exception $e) {
-			if ($user = User::find($request->input('username'))) {
-				if (Hash::check($request->input('password'), $user->password)) {
-					if (Auth::loginUsingId($user->username)) {
-						Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . $request->ip());
-						
-						if ($request->has('redirect_queue')) {
-							return redirect($request->input('redirect_queue'));
-						} elseif ($request->session()->has('redirect_queue')) {
-							$redirect = $request->session()->get('redirect_queue');
-							$request->session()->forget('redirect_queue');
-							return redirect($redirect);
-						} else {
-							return redirect('/')->with('notify', trans('messages.loginsuccess'));
-						}
-					}
-				}
-			}
-			
-			Log::error('Authentication failed (probably caused by unreachable LDAP server)');
-			
-			return redirect('/')->with('notify', trans('messages.ldapfail'));
 		}
 	}
-	
+
+	private function finishedLogin(Request $request) {
+		if ($request->has('redirect_queue')) {
+			return redirect($request->input('redirect_queue'));
+		} elseif ($request->session()->has('redirect_queue')) {
+			$redirect = $request->session()->get('redirect_queue');
+			$request->session()->forget('redirect_queue');
+
+			return redirect($redirect);
+		} else {
+			return redirect('/')->with('notify', trans('messages.loginsuccess'));
+		}
+	}
+
+	private function manualLogin($username, $password, Request $request) {
+		if ($user = User::find($username)) {
+			if (Hash::check($password, $user->password)) {
+				if (Auth::loginUsingId($user->username)) {
+					Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . $request->ip());
+
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	/*
 	 * cleanUserInfo()
 	 *
@@ -124,6 +141,5 @@ class TUSSOController extends Controller {
 			return response('UNAUTHORIZED', 403)->header('X-AccessRight', '');
 		}
 	}
-	
 	
 }

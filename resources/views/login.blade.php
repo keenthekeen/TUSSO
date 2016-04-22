@@ -15,11 +15,26 @@
     <div class="z-depth-1 card-panel" style="max-width:550px;margin:auto">
         <form class="login-form" method="POST" action="/login">
             <input type="hidden" name="_token" value="{{ csrf_token() }}"/>
-            <input type="hidden" name="redirect_queue" value="{{ empty($redirect) ? session()->get('redirect_queue', '') : $redirect }}"/>
+            <input type="hidden" name="redirect_queue"
+                   value="{{ empty($redirect) ? session()->get('redirect_queue', '') : $redirect }}"/>
             <div class="row">
                 <div class="input-field col s12 center">
                     <h4 class="center login-form-text">{{ trans('messages.pleaselogin') }}</h4>
                 </div>
+            </div>
+            <div class="row">
+                @if (count($errors) > 0)
+                    <ul class="collection white-text">
+                        <li class="collection-item red darken-1">เกิดข้อผิดพลาดในข้อมูล
+                            ({{ implode(', ', $errors->all()) }})
+                        </li>
+                    </ul>
+                @endif
+                @if(session()->has('error_message'))
+                    <ul class="collection white-text">
+                        <li class="collection-item red darken-1">{{ session('error_message') }}</li>
+                    </ul>
+                @endif
             </div>
             <div class="row margin">
                 <div class="input-field col s12">
@@ -33,12 +48,12 @@
                 <div class="input-field col s12">
                     <i class="mdi-action-lock-outline prefix"></i>
                     <input id="password" type="password" name="password"
-                           class="{{ $errors->has('password') ? 'validate invalid' : '' }}" required />
+                           class="validate {{ $errors->has('password') ? 'invalid' : '' }}" required/>
                     <label for="password">{{ trans('messages.password') }}</label>
                 </div>
             </div>
             <div class="center-align">
-                <input type="checkbox" id="rem" name="remember" value="true" />
+                <input type="checkbox" id="rem" name="remember" value="true"/>
                 <label for="rem">{{ trans('messages.remember') }}</label>
             </div>
             <div class="row">

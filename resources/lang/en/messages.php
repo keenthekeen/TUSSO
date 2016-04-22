@@ -19,6 +19,7 @@ return [
 	'loginsuccess' => 'Login success!',
 	'loginfail' => 'Login fail!',
 	'ldapfail' => 'Directory unreachable, please notify administrator.',
+	'ldapofffail' => 'Cannot login using local DB',
 	'userdenied' => "Access denied due to your account type.",
 	'type' => 'Type',
 	'student' => 'Student',
