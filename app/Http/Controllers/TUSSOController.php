@@ -49,7 +49,7 @@ class TUSSOController extends Controller {
 						return view('auth-error', ['error' => trans('messages.userdenied')]);
 					}
 				} else {
-					return redirect('/login')->with('error_message', trans('messages.loginfail'));
+					return redirect('/login')->with('error_message', trans('messages.loginfail'))->with('redirect_queue', $request->input('redirect_queue', ''));
 				}
 			} catch (\Exception $e) {
 				if ($this->manualLogin($request->username, $request->password, $request)) {
@@ -58,14 +58,14 @@ class TUSSOController extends Controller {
 
 					Log::error('Authentication failed (probably caused by unreachable LDAP server)');
 
-					return redirect('/login')->with('error_message', trans('messages.ldapfail'));
+					return redirect('/login')->with('error_message', trans('messages.ldapfail'))->with('redirect_queue', $request->input('redirect_queue', ''));
 				}
 			}
 		} else {
 			if ($this->manualLogin($request->username, $request->password, $request)) {
 				return $this->finishedLogin($request);
 			} else {
-				return redirect('/login')->with('error_message', trans('messages.ldapofffail'));
+				return redirect('/login')->with('error_message', trans('messages.ldapofffail'))->with('redirect_queue', $request->input('redirect_queue', ''));
 			}
 		}
 	}
