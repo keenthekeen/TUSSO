@@ -33,7 +33,7 @@ if (config('tusso.shutdown')) {
 		});
 		Route::get('logout', 'UIController@logout');
 
-		Route::get('proxy_auth', 'TUSSOController@proxyAuth');
+		Route::get('api/status', 'TUSSOController@proxyAuth');
 		Route::get('logout/remote', 'ProviderController@RemoteLogout');
 
 		//DEBUGGING PURPOSE
@@ -51,6 +51,7 @@ if (config('tusso.shutdown')) {
 		}
 
 		Route::any('openid/authorize', 'ProviderController@AuthRequest');
+
 	});
 
 	Route::group(['middleware' => ['web', 'auth']], function () {
@@ -61,11 +62,18 @@ if (config('tusso.shutdown')) {
 
 	Route::group(['middleware' => ['api']], function () {
 		Route::get('.well-known/openid-configuration', 'ProviderController@publishConfig');
-		// Limit to only POST request, according to OpenID Connect Core 1.0 Specification.
-		Route::post('openid/token', 'ProviderController@tokenRequest');
 
 		Route::any('access/challenge', 'ProviderController@getChallenge');
 		Route::post('access/token', 'ProviderController@verifyResponse');
+
+		Route::group(['middleware' => ['auth.api']], function () {
+			// Limit to only POST request, according to OpenID Connect Core 1.0 Specification.
+			Route::post('openid/token', 'ProviderController@tokenRequest');
+		});
+	});
+
+	Route::group(['middleware' => ['web', 'api', 'auth.api:true']], function () {
+		Route::get('api/search', 'TUSSOController@apiSearch');
 	});
 
 }

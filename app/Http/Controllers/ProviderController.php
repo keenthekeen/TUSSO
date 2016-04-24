@@ -229,6 +229,7 @@ class ProviderController extends Controller {
 	 * Token Endpoint
 	 */
 	public function tokenRequest(Request $request) {
+		// Request to this function have passed ApiAuth middleware, no more authentication things here.
 
 		$validator = Validator::make($request->all(), [
 			'grant_type' => 'required|in:authorization_code',
@@ -239,48 +240,13 @@ class ProviderController extends Controller {
 			return response()->json(['error' => 'invalid_request', 'error_description' => 'Request malformed'], 400);
 		}
 
-		// Get client secret
-		if ($request->has('client_id') && $request->has('client_secret')) {
-			// "client_secret_post" (including the Client Credentials in the request body)
-			$client_id = $request->input('client_id');
-			$client_secret = $request->input('client_secret');
+		if ($clientCredential = $this->getClientCredential($request)) {
+			$client = Application::find($clientCredential['id']);
 		} else {
-			$headers = apache_request_headers(); // Don't worry, this function also works with FastCGI in PHP5.4+
-			if (array_key_exists('Authorization', $headers)) {
-				// "client_secret_basic" (using of the HTTP Basic authentication scheme)
-				// Header must be formed as urlencode(urlencode(CLIENT_ID).':'.urlencode(CLIENT_SECRET)) (same as Twitter's)
-				$clientAuthHeader = explode(' ', trim($headers['Authorization']));
-				$client_credential = explode(':', $clientAuthHeader[1]);
-				$client_id = urldecode($client_credential[0]);
-				$client_secret = urldecode($client_credential[1]);
-			} else {
-				return response()->json([
-					'error' => 'invalid_client',
-					'error_description' => 'No client credential found'
-				], 401);
-			}
-		}
-
-		// Authenticate client
-		if ($client = Application::find($client_id)) {
-			if ($client->secret != $client_secret) {
-				return response()->json([
-					'error' => 'invalid_client',
-					'error_description' => 'Invalid client credential'
-				], 400);
-			} elseif ($allowed_uri = explode(',', $client->redirect_uri)) {
-				if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
-					return response()->json([
-						'error' => 'invalid_client',
-						'error_description' => 'Invalid redirect uri'
-					], 400);
-				}
-			} else {
-				return response()->json(['error' => 'invalid_client', 'error_description' => 'Misconfigured client'],
-					400);
-			}
-		} else {
-			return response()->json(['error' => 'invalid_client', 'error_description' => 'Client not found'], 400);
+			return response()->json([
+				'error' => 'invalid_client',
+				'error_description' => 'No client credential found'
+			], 401);
 		}
 
 		// Parse & validate JWT
@@ -294,7 +260,7 @@ class ProviderController extends Controller {
 		if (!$token->validate($vdata)) {
 			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Expired authorization code'],
 				400);
-		} elseif ($token->getClaim('client_id') != $client_id) {
+		} elseif ($token->getClaim('client_id') != $client->name) {
 			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Stolen authorization code'],
 				400);
 		}
@@ -475,5 +441,26 @@ class ProviderController extends Controller {
 		->set('client', $appname)// Configures a new claim
 		->set('scope', $appscope)->sign($signer, $privateKey)->getToken(); // Retrieves the generated token
 		return $token;
+	}
+
+	public function getClientCredential(Request $request) {
+		if ($request->has('client_id') && $request->has('client_secret')) {
+			// "client_secret_post" (including the Client Credentials in the request body)
+			$client_id = $request->input('client_id');
+			$client_secret = $request->input('client_secret');
+		} else {
+			$headers = apache_request_headers(); // Don't worry, this function also works with FastCGI in PHP5.4+
+			if (array_key_exists('Authorization', $headers)) {
+				// "client_secret_basic" (using of the HTTP Basic authentication scheme)
+				// Header must be formed as urlencode(urlencode(CLIENT_ID).':'.urlencode(CLIENT_SECRET)) (same as Twitter's)
+				$clientAuthHeader = explode(' ', trim($headers['Authorization']));
+				$client_credential = explode(':', $clientAuthHeader[1]);
+				$client_id = urldecode($client_credential[0]);
+				$client_secret = urldecode($client_credential[1]);
+			} else {
+				return false;
+			}
+		}
+		return ['id' => $client_id, 'secret' => $client_secret];
 	}
 }

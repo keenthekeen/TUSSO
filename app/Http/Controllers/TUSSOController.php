@@ -49,7 +49,8 @@ class TUSSOController extends Controller {
 						return view('auth-error', ['error' => trans('messages.userdenied')]);
 					}
 				} else {
-					return redirect('/login')->with('error_message', trans('messages.loginfail'))->with('redirect_queue', $request->input('redirect_queue', ''));
+					return redirect('/login')->with('error_message',
+						trans('messages.loginfail'))->with('redirect_queue', $request->input('redirect_queue', ''));
 				}
 			} catch (\Exception $e) {
 				if ($this->manualLogin($request->username, $request->password, $request)) {
@@ -58,14 +59,16 @@ class TUSSOController extends Controller {
 
 					Log::error('Authentication failed (probably caused by unreachable LDAP server)');
 
-					return redirect('/login')->with('error_message', trans('messages.ldapfail'))->with('redirect_queue', $request->input('redirect_queue', ''));
+					return redirect('/login')->with('error_message', trans('messages.ldapfail'))->with('redirect_queue',
+						$request->input('redirect_queue', ''));
 				}
 			}
 		} else {
 			if ($this->manualLogin($request->username, $request->password, $request)) {
 				return $this->finishedLogin($request);
 			} else {
-				return redirect('/login')->with('error_message', trans('messages.ldapofffail'))->with('redirect_queue', $request->input('redirect_queue', ''));
+				return redirect('/login')->with('error_message', trans('messages.ldapofffail'))->with('redirect_queue',
+					$request->input('redirect_queue', ''));
 			}
 		}
 	}
@@ -136,9 +139,29 @@ class TUSSOController extends Controller {
 	 */
 	public function proxyAuth() {
 		if (Auth::check()) {
-			return response('AUTHENTICATED', 200)->header('X-AccessRight', 'GRANTED');
+			return response('AUTHENTICATED', 200)->header('X-AccessRight', 'TUSSO_GRANTED')->header('Access-Control-Allow-Origin', '*');
 		} else {
-			return response('UNAUTHORIZED', 403)->header('X-AccessRight', '');
+			return response('UNAUTHORIZED', 403)->header('X-AccessRight', '')->header('Access-Control-Allow-Origin', '*');
+		}
+	}
+
+	public function apiSearch(Request $request) {
+		if ($request->has('keyword')) {
+			if ($quser = User::where('name', 'LIKE', '%' . $request->keyword . '%')->orWhere('username', 'LIKE',
+				'%' . $request->keyword . '%')->first()
+			) {
+				return response()->json(['name' => $quser->name, 'id' => $quser->username])->header('Access-Control-Allow-Origin', '*');
+			} else {
+				return response()->json(['error' => 'NAME_NOT_FOUND'])->header('Access-Control-Allow-Origin', '*');
+			}
+		} elseif ($request->has('id')) {
+			if ($quser = User::find($request->id)) {
+				return response()->json(['name' => $quser->name, 'id' => $quser->username])->header('Access-Control-Allow-Origin', '*');
+			} else {
+				return response()->json(['error' => 'ID_NOT_FOUND'])->header('Access-Control-Allow-Origin', '*');
+			}
+		} else {
+			return response()->json(['error' => 'EMPTY_REQUEST'])->header('Access-Control-Allow-Origin', '*');
 		}
 	}
 	
