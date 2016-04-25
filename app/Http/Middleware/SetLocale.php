@@ -21,7 +21,7 @@ class SetLocale {
 			$locale = $request->session()->get('locale', 'th');
 		/*} elseif (!empty($request->cookie('locale'))) {
 			$locale = $request->cookie('locale');*/
-		} elseif (str_contains($_SERVER['HTTP_ACCEPT_LANGUAGE'], 'th-TH')) {
+		} elseif (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) && str_contains($_SERVER['HTTP_ACCEPT_LANGUAGE'], 'th-TH')) {
 			$locale = 'th';
 		}
 

@@ -37,13 +37,13 @@ class TUSSOController extends Controller {
 				], $request->has('remember'))
 				) {
 					if ($this->cleanUserInfo()) {
-						Log::info(Auth::user()->username . ' logged in from ' . $request->ip());
+						Log::info(Auth::user()->username . ' logged in from ' . $this->getIPAddress($request));
 
 						return $this->finishedLogin($request);
 					} else {
 						// User not registered as staff nor student, suspected as guest, denying access.
 						Auth::logout();
-						Log::notice(Auth::user()->username . ' tried to log in from ' . $request->ip() . ' but cannot determine user type');
+						Log::notice(Auth::user()->username . ' tried to log in from ' . $this->getIPAddress($request) . ' but cannot determine user type');
 
 						//return redirect('/')->with('notify', trans('messages.userdenied'));
 						return view('auth-error', ['error' => trans('messages.userdenied')]);
@@ -90,7 +90,7 @@ class TUSSOController extends Controller {
 		if ($user = User::find($username)) {
 			if (Hash::check($password, $user->password)) {
 				if (Auth::loginUsingId($user->username)) {
-					Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . $request->ip());
+					Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . $this->getIPAddress($request));
 
 					return true;
 				}
@@ -163,6 +163,17 @@ class TUSSOController extends Controller {
 		} else {
 			return response()->json(['error' => 'EMPTY_REQUEST'])->header('Access-Control-Allow-Origin', '*');
 		}
+	}
+
+	public function getIPAddress (Request $request) {
+		if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
+			$ip = $_SERVER["HTTP_CF_CONNECTING_IP"];
+		} elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+			$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		} else {
+			$ip = $request->ip();
+		}
+		return $ip;
 	}
 	
 }
