@@ -72,7 +72,7 @@ if (config('tusso.shutdown')) {
 		});
 	});
 
-	Route::group(['middleware' => ['web', 'api', 'auth.api:true']], function () {
+	Route::group(['middleware' => ['web', 'api']], function () {
 		Route::get('api/search', 'TUSSOController@apiSearch');
 	});
 
