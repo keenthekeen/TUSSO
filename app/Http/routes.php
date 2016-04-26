@@ -66,7 +66,7 @@ if (config('tusso.shutdown')) {
 		Route::any('access/challenge', 'ProviderController@getChallenge');
 		Route::post('access/token', 'ProviderController@verifyResponse');
 
-		Route::get('openid/token', 'ProviderController@tokenRequest');
+		Route::post('openid/token', 'ProviderController@tokenRequest');
 	});
 
 	Route::group(['middleware' => ['web', 'api', 'auth.api:true']], function () {
