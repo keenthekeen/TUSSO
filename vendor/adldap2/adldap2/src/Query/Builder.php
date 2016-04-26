@@ -52,6 +52,13 @@ class Builder
     protected $sortByDirection = '';
 
     /**
+     * Stores the sort flags for sorting query results.
+     *
+     * @var int
+     */
+    protected $sortByFlags;
+
+    /**
      * The distinguished name to perform searches upon.
      *
      * @var string|null
@@ -311,7 +318,7 @@ class Builder
      *
      * @param array|string $columns
      *
-     * @return Entry|false
+     * @return mixed
      */
     public function first($columns = [])
     {
@@ -322,9 +329,6 @@ class Builder
         } elseif (is_array($results) && array_key_exists(0, $results)) {
             return $results[0];
         }
-
-        // No entries were returned, return false
-        return false;
     }
 
     /**
@@ -356,7 +360,7 @@ class Builder
      * @param string       $value
      * @param array|string $columns
      *
-     * @return Entry|bool
+     * @return mixed
      */
     public function findBy($attribute, $value, $columns = [])
     {
@@ -374,7 +378,7 @@ class Builder
      *
      * @throws ModelNotFoundException
      *
-     * @return Entry|bool
+     * @return mixed
      */
     public function findByOrFail($attribute, $value, $columns = [])
     {
@@ -387,7 +391,7 @@ class Builder
      * @param string       $anr
      * @param array|string $columns
      *
-     * @return Entry|bool
+     * @return mixed
      */
     public function find($anr, $columns = [])
     {
@@ -403,7 +407,7 @@ class Builder
      *
      * @throws ModelNotFoundException
      *
-     * @return Entry|bool
+     * @return mixed
      */
     public function findOrFail($anr, $columns = [])
     {
@@ -462,7 +466,7 @@ class Builder
      * @param string       $sid
      * @param array|string $columns
      *
-     * @return bool|Entry
+     * @return mixed
      */
     public function findBySid($sid, $columns = [])
     {
@@ -974,12 +978,13 @@ class Builder
      * Sorts the LDAP search results by the
      * specified field and direction.
      *
-     * @param string $field
-     * @param string $direction
+     * @param string   $field
+     * @param string   $direction
+     * @param int|null $flags
      *
      * @return Builder
      */
-    public function sortBy($field, $direction = 'asc')
+    public function sortBy($field, $direction = 'asc', $flags = null)
     {
         $this->sortByField = $field;
 
@@ -989,6 +994,12 @@ class Builder
         if ($direction === 'asc' || $direction === 'desc') {
             $this->sortByDirection = $direction;
         }
+
+        if (is_null($flags)) {
+            $flags = SORT_NATURAL + SORT_FLAG_CASE;
+        }
+
+        $this->sortByFlags = $flags;
 
         return $this;
     }
@@ -1058,6 +1069,16 @@ class Builder
     public function getSortByDirection()
     {
         return $this->sortByDirection;
+    }
+
+    /**
+     * Returns the query builders sort by flags.
+     *
+     * @return int
+     */
+    public function getSortByFlags()
+    {
+        return $this->sortByFlags;
     }
 
     /**
