@@ -15,6 +15,7 @@ use Lcobucci\JWT\Builder;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Lcobucci\JWT\ValidationData;
 use Lcobucci\JWT\Parser;
+use \Lcobucci\JWT\Signer\Key;
 
 class ProviderController extends Controller {
 	/*
@@ -72,7 +73,7 @@ class ProviderController extends Controller {
 			 *
 			 # We implement only some of the type.
 			 */
-			'response_type' => 'required|in:code,id_token',
+			'response_type' => 'required',
 
 			/* client_id
 			 *
@@ -190,7 +191,9 @@ class ProviderController extends Controller {
 		 */
 		
 		$user = $request->user();
-		if ($request->input('response_type', 'NULL') == 'code') {
+		$data = array();
+		$respType = explode(' ', $request->input('response_type', 'NULL'));
+		if (in_array('code', $respType)) {
 
 			//Create authorization token.
 			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
@@ -201,22 +204,19 @@ class ProviderController extends Controller {
 			->set('user', $user->username)->set('client_id',
 				$request->input('client_id'))->getToken(); // Retrieves the generated token
 			
-			$data = array(
-				'code' => $this->encrypt($token),
-				'state' => $request->input('state', '')
-			);
-		} elseif ($request->input('response_type', 'NULL') == 'id_token') {
+			$data['code'] = $this->encrypt($token);
+			$data['state'] = $request->input('state', '');
+		}
+		if (in_array('id_token', $respType)) {
 
 			//Create JWT ID token, containing user's basic info, signed with app secret.
 			$token = $this->createIDToken($user, $app, $request->input('nonce', ''));
 
 			// We send user's info to client in JWT, which is not encrypted, so using of TLS is highly recommended and avoid sensitive data being sent.
-			$data = array(
-				'id_token' => $token,
-				'state' => $request->input('state', ''),
-				'expires_in' => 3600
-			);
-		} else {
+			$data['id_token'] = $token;
+			$data['state'] = $request->input('state', '');
+			$data['expires_in'] = 3600;
+		} elseif (empty($data)) {
 			return view('auth-error', ['error' => 'NOT_IMPLEMENTED_RESPONSE_TYPE']);
 		}
 		
@@ -229,8 +229,6 @@ class ProviderController extends Controller {
 	 * Token Endpoint
 	 */
 	public function tokenRequest(Request $request) {
-		// Request to this function have passed ApiAuth middleware, no more authentication things here.
-
 		$validator = Validator::make($request->all(), [
 			'grant_type' => 'required|in:authorization_code',
 			'code' => 'required',
@@ -241,7 +239,26 @@ class ProviderController extends Controller {
 		}
 
 		if ($clientCredential = $this->getClientCredential($request)) {
-			$client = Application::find($clientCredential['id']);
+			if ($client = Application::find($clientCredential['id'])) {
+				if ($client->secret != $clientCredential['secret']) {
+					return response()->json([
+						'error' => 'invalid_client',
+						'error_description' => 'Invalid client credential'
+					], 400);
+				} elseif ($allowed_uri = explode(',', $client->redirect_uri)) {
+					if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
+						return response()->json([
+							'error' => 'invalid_client',
+							'error_description' => 'Invalid redirect uri'
+						], 400);
+					}
+				} else {
+					return response()->json(['error' => 'invalid_client', 'error_description' => 'Misconfigured client'],
+						400);
+				}
+			} else {
+				return response()->json(['error' => 'invalid_client', 'error_description' => 'Client not found'], 400);
+			}
 		} else {
 			return response()->json([
 				'error' => 'invalid_client',
@@ -268,15 +285,15 @@ class ProviderController extends Controller {
 		//If possible, verify that the Authorization Code has not been previously used.
 
 		// Now, client is authenticated and token is valid.
-		if (!$user = User::find($token->get('user'))) {
+		if (!$user = User::find($token->getClaim('user'))) {
 			// User not found, nearly impossible to happens.
 			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Invalid authorization code'],
 				400);
 		}
-		Log::info('Access token has been issued during OpenID auth flow for ' . $client->name . ' (' . $request->ip() . ')');
+		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ', User:'. $user->username . ')');
 
 		return response()->json([
-			'access_token' => $this->issueAccessToken($client->name, explode(',', $client->scope)),
+			'access_token' => $this->issueAccessToken($client->name, explode(',', $client->scope), $user->username),
 			'token_type' => 'Bearer',
 			'expires_in' => 3600,
 			'id_token' => $this->createIDToken($user, $client)
@@ -361,7 +378,7 @@ class ProviderController extends Controller {
 		}
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ')');
 
-		return $this->issueAccessToken($client->name, explode(',', $client->scope));
+		return $this->issueAccessToken($client->name, explode(',', $client->scope), '*');
 	}
 
 	public function RemoteLogout(Request $request) {
@@ -401,7 +418,7 @@ class ProviderController extends Controller {
 		->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
 			$nonce)->sign($signer, $app->secret)// creates a signature
 		->getToken(); // Retrieves the generated token
-		return $token;
+		return (String) $token;
 	}
 
 	private function encrypt($secret) {
@@ -426,10 +443,10 @@ class ProviderController extends Controller {
 	 * @param String $appname
 	 * @param Array $appscope
 	 */
-	private function issueAccessToken($appname, $appscope) {
+	private function issueAccessToken($appname, $appscope, $foruser) {
 		//Create JWT access token, grant access to all user.
 		$signer = new \Lcobucci\JWT\Signer\Rsa\Sha256();
-		$privateKey = new \Lcobucci\JWT\Signer\Key(Storage::get('private.key'));
+		$privateKey = new Key(Storage::get('private.key'));
 
 		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
 		->setAudience('https://' . $appname)// Configures the audience (aud claim)
@@ -439,8 +456,10 @@ class ProviderController extends Controller {
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
 		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
 		->set('client', $appname)// Configures a new claim
-		->set('scope', $appscope)->sign($signer, $privateKey)->getToken(); // Retrieves the generated token
-		return $token;
+		->set('scope', $appscope)
+		->set('foruser', $foruser)
+		->sign($signer, $privateKey)->getToken(); // Retrieves the generated token
+		return (String) $token;
 	}
 
 	public function getClientCredential(Request $request) {

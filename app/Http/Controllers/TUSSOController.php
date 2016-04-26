@@ -41,9 +41,9 @@ class TUSSOController extends Controller {
 
 						return $this->finishedLogin($request);
 					} else {
-						// User not registered as staff nor student, suspected as guest, denying access.
+						// User has problem with his data, deny access and tell him to contact administrator
+						Log::notice(Auth::user()->username . ' tried to log in from ' . $this->getIPAddress($request) . ' but has some problem, denied access.');
 						Auth::logout();
-						Log::notice(Auth::user()->username . ' tried to log in from ' . $this->getIPAddress($request) . ' but cannot determine user type');
 
 						//return redirect('/')->with('notify', trans('messages.userdenied'));
 						return view('auth-error', ['error' => trans('messages.userdenied')]);
@@ -112,7 +112,12 @@ class TUSSOController extends Controller {
 		if (str_contains($user->group, 'Staffs') || str_contains($user->group, 'Domain Admins')) {
 			$user->type = 'staff';
 		} elseif (str_contains($user->group, 'Students')) {
-			$user->type = 'student';
+			// If he is student, his username must be in "s00000" format, or else deny access to prevent further problem in other applications.
+			if (preg_match("/^s\d\d\d\d\d$/", $user->username)) {
+				$user->type = 'student';
+			} else {
+				return false;
+			}
 		} else {
 			// Neither staff nor student, not allowed to authenticate
 			return false;
@@ -167,8 +172,10 @@ class TUSSOController extends Controller {
 
 	public function getIPAddress (Request $request) {
 		if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
+			// Cloudflare
 			$ip = $_SERVER["HTTP_CF_CONNECTING_IP"];
 		} elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+			// Proxy server, including Nginx.
 			$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
 		} else {
 			$ip = $request->ip();
