@@ -30,6 +30,13 @@ return [
 	 */
 	'use_ldap' => env('TUSSO_USE_LDAP',true),
 
+	/* --------------------------------------------------------------------------
+	 * Allow new student login
+	 * --------------------------------------------------------------------------
+	 * Allow new student to register&login using their TUENT info, expecting "tuent_applicant" table containing fname,lname,nationalid,plan_id
+	 */
+	'use_tuent' => env('TUSSO_ALLOW_TUENT',false),
+
 	/* CAUTION!
 	 * - This app utilize laravel's encryption key configuration (APP_KEY), secure and random encryption key is required.
 	 * 

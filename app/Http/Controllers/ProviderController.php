@@ -61,7 +61,7 @@ class ProviderController extends Controller {
 			 * Other scope values MAY be present.
 			 * Scope values used that are not understood by an implementation SHOULD be ignored.
 			 *
-			 # We currently implements only "openid" scope.
+			 * scope values are separated by space (" ")
 			 */
 			'scope' => 'required',
 
@@ -145,6 +145,13 @@ class ProviderController extends Controller {
 				if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
 					return view('auth-error', ['error' => 'NOT_ALLOWED_REDIRECT_URI']);
 				}
+
+				$allowed_scope = explode(' ', $app->scope);
+				$requested_scope = explode(' ', $request->input('scope'));
+				if(count(array_intersect($allowed_scope, $requested_scope)) < count($requested_scope)){
+					// Some of the requested scope is not allowed.
+					return view('auth-error', ['error' => 'NOT_ALLOWED_SCOPE']);
+				}
 			} else {
 				return view('auth-error', ['error' => 'MISCONFIGURED_CLIENT']);
 			}
@@ -201,8 +208,10 @@ class ProviderController extends Controller {
 				true)// Configures the id (jti claim), replicating as a header item
 			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 			->setExpiration(time() + 900)// Configures the expiration time of the token (exp claim)
-			->set('user', $user->username)->set('client_id',
-				$request->input('client_id'))->getToken(); // Retrieves the generated token
+			->set('user', $user->username)
+			->set('client_id', $request->input('client_id'))
+			->set('scope', $requested_scope)
+			->getToken(); // Retrieves the generated token
 			
 			$data['code'] = $this->encrypt($token);
 			$data['state'] = $request->input('state', '');
@@ -232,7 +241,7 @@ class ProviderController extends Controller {
 		$validator = Validator::make($request->all(), [
 			'grant_type' => 'required|in:authorization_code',
 			'code' => 'required',
-			'redirect_uri' => 'required|url'
+			//'redirect_uri' => 'required|url'
 		]);
 		if ($validator->fails()) {
 			return response()->json(['error' => 'invalid_request', 'error_description' => 'Request malformed'], 400);
@@ -245,16 +254,15 @@ class ProviderController extends Controller {
 						'error' => 'invalid_client',
 						'error_description' => 'Invalid client credential'
 					], 400);
-				} elseif ($allowed_uri = explode(',', $client->redirect_uri)) {
-					if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
-						return response()->json([
-							'error' => 'invalid_client',
-							'error_description' => 'Invalid redirect uri'
-						], 400);
-					}
+					/*} elseif ($allowed_uri = explode(',', $client->redirect_uri)) {
+						if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
+							return response()->json([
+								'error' => 'invalid_client',
+								'error_description' => 'Invalid redirect uri'
+							], 400);
+						}
 				} else {
-					return response()->json(['error' => 'invalid_client', 'error_description' => 'Misconfigured client'],
-						400);
+					return response()->json(['error' => 'invalid_client', 'error_description' => 'Misconfigured client'], 400);*/
 				}
 			} else {
 				return response()->json(['error' => 'invalid_client', 'error_description' => 'Client not found'], 400);
@@ -293,7 +301,7 @@ class ProviderController extends Controller {
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ', User:'. $user->username . ')');
 
 		return response()->json([
-			'access_token' => $this->issueAccessToken($client->name, explode(',', $client->scope), $user->username),
+			'access_token' => $this->issueAccessToken($client->name, $token->getClaim('scope'), $user->username),
 			'token_type' => 'Bearer',
 			'expires_in' => 3600,
 			'id_token' => $this->createIDToken($user, $client)
@@ -302,7 +310,7 @@ class ProviderController extends Controller {
 
 	public function publishConfig() {
 		return response()->json(array(
-			'issuer' => config('tusso.url'),
+			'issuer' => config('tusso.url'),-
 			'authorization_endpoint' => config('tusso.url') . '/openid/authorize',
 			'token_endpoint' => config('tusso.url') . '/openid/token',
 			'response_types_supported' => ['code', 'id_token'],

@@ -36,6 +36,15 @@ if (config('tusso.shutdown')) {
 		Route::get('api/status', 'TUSSOController@proxyAuth');
 		Route::get('logout/remote', 'ProviderController@RemoteLogout');
 
+		if (config('tusso.use_tuent')) {
+			Route::get('newstudent_register', function () {
+				return view('newstudent');
+			});
+			Route::group(['middleware' => 'throttle:15,3'], function () {
+				Route::post('newstudent_register', 'TUSSOController@newStudentRegister');
+			});
+		}
+
 		//DEBUGGING PURPOSE
 		if (config('app.debug')) {
 			Route::get('/view/{id}', function ($id) {

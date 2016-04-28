@@ -65,6 +65,9 @@
             </div>
             <div class="center-align">
                 <a class="modal-trigger" href="#modal-forget">{{trans('messages.forget_pwd')}}</a>
+                @if (config('tusso.use_tuent'))
+                    <br /><a href="/newstudent_register">{{trans('messages.tuent_register')}}</a>
+                @endif
             </div>
 
         </form>
