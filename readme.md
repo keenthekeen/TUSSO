@@ -1,16 +1,24 @@
-# Triamudom Single Sign-On Service Provider
-Centralized Authentication System for Triamudom Personnel
+# Triamudom Central Authentication Service
 
-The free-time project, based on Laravel 5 and Materialize
+The centralized authentication system for Triamudom personnel, based on Laravel 5.2.
 
-Development Status: Release Candidate
+Please read the contribution guide before contributing any changes.
 
-Please read the contribution guide before contributing.
+## Features
+- Integrated with directory server using LDAP
+- Works with Nginx auth_module
+- Implemented OpenID Connect implicit, authorization code, and hybrid flow as provider (OP)
+- Issues Resource Server (TURS) access tokens (as JWT, signed using RSA)
+- Also works during directory server shortage, using local database
+- Allow new student to register for temporary account by working with TUENT applicant database
+- Allow applications to search for user id using name and vice-versa
+- [ ] Implemented OpenID Connect Discovery (Not fully comply with the specification yet)
+- [ ] Implemented (partially) single sign-out. (For now, it cannot logout user from other apps)
 
-
-### Features
-- [x] LDAP Integration
-- [x] Nginx Auth module
-- [x] OpenID Connect Implicit flow
-- [x] OpenID Connect Authorization Code flow
-- [x] Access token issuing
+### Specification/Standard Compliance
+- OpenID Connect Core 1.0
+- OpenID Connect Discovery 1.0 (Now, partially)
+- JSON Web Token (JWT) (draft)
+- The OAuth 2.0 Authorization Framework: Bearer Token Usage
+- [ ] OAuth 2.0 Threat Model and Security Considerations
+- [ ] OpenID Connect Session Management 1.0 (draft)

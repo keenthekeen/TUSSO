@@ -1,9 +1,11 @@
+This application should implement PHP/Laravel's built-in function, and comply with existing specifications where possible.
+
 ###PHP
 Contributors should follow PSR-2, the PHP coding style guideline, with the following exceptions:
 
 - You MUST use tabs for indenting instead of 4 spaces.
 - Opening braces for classes, methods, functions, or condition MUST go on the same line, and closing braces MUST go on the next line after the body.
-- Use single quote (') instead of double quote (") which has a performance issue, also, to easily insert HTML as string without confusion.
+- Use single quote (') instead of double quote (") which is slower, also, to easily insert HTML as string without confusion.
 
 
 ###HTML
@@ -14,7 +16,7 @@ Contributors should follow PSR-2, the PHP coding style guideline, with the follo
 
 
 ###Logging
-TUATS implements Laravel's logging facilities, which provides the eight logging levels defined in RFC 5424:
+TUSSO implements Laravel's logging facilities, which provides the eight logging levels defined in RFC 5424:
 - Emergency: system is unusable
 - Alert: action must be taken immediately
 - Critical: critical conditions
