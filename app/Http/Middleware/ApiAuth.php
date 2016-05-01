@@ -69,7 +69,7 @@ class ApiAuth {
 					return response()->json([
 						'error' => 'invalid_client',
 						'error_description' => 'No client credential found'
-					], 401);
+					], 401)->header('WWW-Authenticate', 'Basic realm="Please specify your client credential"');
 				}
 			}
 
@@ -92,9 +92,9 @@ class ApiAuth {
 				return response()->json([
 					'error' => 'UNTRUSTED_ACCESS_TOKEN',
 				], 403);
+			} else {
+				$request->session()->put('api_clearance', $token->getClaim('foruser'));
 			}
-
-			$request->session()->put('api_clearance', $token->getClaims('foruser'));
 		}
 		
 		return $next($request);

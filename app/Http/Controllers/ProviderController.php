@@ -148,7 +148,7 @@ class ProviderController extends Controller {
 
 				$allowed_scope = explode(' ', $app->scope);
 				$requested_scope = explode(' ', $request->input('scope'));
-				if(count(array_intersect($allowed_scope, $requested_scope)) < count($requested_scope)){
+				if (count(array_intersect($allowed_scope, $requested_scope)) < count($requested_scope)) {
 					// Some of the requested scope is not allowed.
 					return view('auth-error', ['error' => 'NOT_ALLOWED_SCOPE']);
 				}
@@ -185,7 +185,8 @@ class ProviderController extends Controller {
 			// After logged in, makes the user redirected back here again.
 			//$request->session()->put('redirect_queue', $request->fullUrl());
 
-			return redirect('/login')->with('notify', trans('messages.pleaselogin'))->with('redirect_queue', $request->fullUrl());
+			return redirect('/login')->with('notify', trans('messages.pleaselogin'))->with('redirect_queue',
+				$request->fullUrl());
 		}
 
 		/* Step 4: Authorization Server Obtains End-User Consent/Authorization
@@ -208,10 +209,8 @@ class ProviderController extends Controller {
 				true)// Configures the id (jti claim), replicating as a header item
 			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 			->setExpiration(time() + 900)// Configures the expiration time of the token (exp claim)
-			->set('user', $user->username)
-			->set('client_id', $request->input('client_id'))
-			->set('scope', $requested_scope)
-			->getToken(); // Retrieves the generated token
+			->set('user', $user->username)->set('client_id', $request->input('client_id'))->set('scope',
+				$requested_scope)->getToken(); // Retrieves the generated token
 			
 			$data['code'] = $this->encrypt($token);
 			$data['state'] = $request->input('state', '');
@@ -219,7 +218,8 @@ class ProviderController extends Controller {
 		if (in_array('id_token', $respType)) {
 
 			//Create JWT ID token, containing user's basic info, signed with app secret.
-			$token = $this->createIDToken($user, $app, $request->input('nonce', ''));
+			$token = $this->createIDToken($user, $app, $request->input('nonce', ''),
+				$request->session()->get('session_state', ''));
 
 			// We send user's info to client in JWT, which is not encrypted, so using of TLS is highly recommended and avoid sensitive data being sent.
 			$data['id_token'] = $token;
@@ -228,7 +228,8 @@ class ProviderController extends Controller {
 		} elseif (empty($data)) {
 			return view('auth-error', ['error' => 'NOT_IMPLEMENTED_RESPONSE_TYPE']);
 		}
-		
+		Log::debug($user->username . ' logging into ' . $request->input('client_id'));
+
 		return view('auth-forward', ['goto' => $request->input('redirect_uri'), 'data' => $data]);
 	}
 
@@ -298,7 +299,7 @@ class ProviderController extends Controller {
 			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Invalid authorization code'],
 				400);
 		}
-		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ', User:'. $user->username . ')');
+		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ', User:' . $user->username . ')');
 
 		return response()->json([
 			'access_token' => $this->issueAccessToken($client->name, $token->getClaim('scope'), $user->username),
@@ -308,15 +309,22 @@ class ProviderController extends Controller {
 		]);
 	}
 
+	/* publishConfig()
+	 *
+	 * responds OpenID Connect Discovery request.
+	 */
 	public function publishConfig() {
 		return response()->json(array(
-			'issuer' => config('tusso.url'),-
-			'authorization_endpoint' => config('tusso.url') . '/openid/authorize',
+			'issuer' => config('tusso.url'),
+			-'authorization_endpoint' => config('tusso.url') . '/openid/authorize',
 			'token_endpoint' => config('tusso.url') . '/openid/token',
 			'response_types_supported' => ['code', 'id_token'],
 			'grant_types_supported' => ["authorization_code", "implicit"],
 			'claims_supported' => ['id', 'name', 'type', 'group'],
-			'ui_locales_supported' => ['th', 'en']
+			'ui_locales_supported' => ['th', 'en'],
+			
+			// The following endpoint is not comply with the spec.
+			'x_check_session_iframe' => config('tusso.url') . '/state_validate',
 		));
 	}
 
@@ -389,21 +397,56 @@ class ProviderController extends Controller {
 		return $this->issueAccessToken($client->name, explode(',', $client->scope), '*');
 	}
 
-	public function RemoteLogout(Request $request) {
-		$validator = Validator::make($request->all(), [
-			'client_id' => 'required'
-		]);
+	/* validateSessionState()
+	 *
+	 * match requested session_state with session.
+	 */
+	public function validateSessionState(Request $request) {
+		return ($request->input('session_state') == $request->session()->get('session_state')) ? 'valid' : 'invalid';
+	}
 
-		if ($validator->fails()) {
-			return view('auth-error', ['error' => 'MALFORMED_LOGOUT_REQUEST']);
+	/* remoteLogout()
+	 *
+	 * handle RP-Initiated Logout (OpenID Connect Session Management), receive following parameters:
+	 * - id_token_hint : ID Token represent currently logged in user, issued by TUSSO
+	 * - post_logout_redirect_uri : URL to which the RP is requesting that the End-User's User Agent be redirected after a logout has been performed.
+	 *   The value MUST have been previously registered with the OP.
+	 * - state : Opaque value used by the RP to maintain state between the logout request and the callback to the endpoint
+	 *   specified by the post_logout_redirect_uri query parameter.
+	 */
+	public function remoteLogout(Request $request) {
+		if ($request->has('post_logout_redirect_uri')) {
+			if (!$request->has('id_token_hint')) {
+				return view('auth-error', ['error' => 'Please specify ID token.']);
+			}
+			$token = (new Parser())->parse((string)$request->input('id_token_hint'));
+			$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
+			$vdata->setIssuer(config('tusso.url'));
+			$signer = new Sha256();
+			$vdata->setCurrentTime(time() - 1000);
+			if (!$token->validate($vdata)) {
+				return view('auth-error', ['error' => 'Expired identity token']);
+			}
+			if (!$client = Application::find(str_replace('https://', '', $token->getClaim('aud')))) {
+				return view('auth-error', ['error' => 'Invalid identity token (CLI)']);
+			} elseif (!$token->verify($signer, $client->secret)) {
+				return view('error', ['error' => 'Invalid identity token (SIG)']);
+			}
+
+			$parse = parse_url($request->input('post_logout_redirect_uri'));
+			if ($parse['host'] != str_replace('https://', '', $token->getClaim('aud'))) {
+				return view('auth-error', ['error' => 'Unauthorized redirect URL']);
+			}
+
+			Auth::logout();
+			$locale = $request->session()->get('locale', 'th');
+			$request->session()->flush();
+			$request->session()->put('locale', $locale);
+
+			return redirect($request->input('post_logout_redirect_uri').(str_contains($request->input('post_logout_redirect_uri'), '?') ? '&' : '?').'state='.$request->input('state'));
+		} else {
+			return (new UIController)->logout($request);
 		}
-
-		if (!$app = Application::find($request->input('client_id'))) {
-			return view('auth-error', ['error' => 'CLIENT_ID_NOT_FOUND']);
-		}
-		Auth::logout();
-
-		return redirect('https://' . $app->name . '?tusso=loggedout');
 	}
 
 
@@ -412,21 +455,21 @@ class ProviderController extends Controller {
 	 * the following methods shouldn't be called directly from outside.
 	 */
 
-	private function createIDToken($user, $app, $nonce = '') {
+	private function createIDToken($user, $app, $nonce = '', $session_state = '') {
 		//Create JWT ID token, containing user's basic info, signed with app secret.
 		$signer = new Sha256();
 		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
 		->setAudience('https://' . $app->name)// Configures the audience (aud claim)
-		->setId('TUSSO-ID-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
+		->setId('TUSSO-ID-' . $user->username . '-' . microtime() . rand(10, 99),
 			true)// Configures the id (jti claim), replicating as a header item
 		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
-		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
+		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim) -- Client should set their session expiration time to this
 		->set('id', $user->username)// Configures a new claim
 		->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
-			$nonce)->sign($signer, $app->secret)// creates a signature
-		->getToken(); // Retrieves the generated token
-		return (String) $token;
+			$nonce)->set('session_state', $session_state)->sign($signer,
+			$app->secret)->getToken(); // Retrieves the generated token
+		return (String)$token;
 	}
 
 	private function encrypt($secret) {
@@ -464,10 +507,9 @@ class ProviderController extends Controller {
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
 		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
 		->set('client', $appname)// Configures a new claim
-		->set('scope', $appscope)
-		->set('foruser', $foruser)
-		->sign($signer, $privateKey)->getToken(); // Retrieves the generated token
-		return (String) $token;
+		->set('scope', $appscope)->set('foruser', $foruser)->sign($signer,
+			$privateKey)->getToken(); // Retrieves the generated token
+		return (String)$token;
 	}
 
 	public function getClientCredential(Request $request) {
@@ -475,19 +517,23 @@ class ProviderController extends Controller {
 			// "client_secret_post" (including the Client Credentials in the request body)
 			$client_id = $request->input('client_id');
 			$client_secret = $request->input('client_secret');
-		} else {
+
+			// "client_secret_basic" (using of the HTTP Basic authentication scheme)
+			/*} else {
 			$headers = apache_request_headers(); // Don't worry, this function also works with FastCGI in PHP5.4+
 			if (array_key_exists('Authorization', $headers)) {
-				// "client_secret_basic" (using of the HTTP Basic authentication scheme)
 				// Header must be formed as urlencode(urlencode(CLIENT_ID).':'.urlencode(CLIENT_SECRET)) (same as Twitter's)
 				$clientAuthHeader = explode(' ', trim($headers['Authorization']));
 				$client_credential = explode(':', $clientAuthHeader[1]);
 				$client_id = urldecode($client_credential[0]);
-				$client_secret = urldecode($client_credential[1]);
-			} else {
-				return false;
-			}
+				$client_secret = urldecode($client_credential[1]);*/
+		} elseif (isset($_SERVER['PHP_AUTH_USER'])) {
+			$client_id = $_SERVER['PHP_AUTH_USER'];
+			$client_secret = $_SERVER['PHP_AUTH_PW'];
+		} else {
+			return false;
 		}
+
 		return ['id' => $client_id, 'secret' => $client_secret];
 	}
 }

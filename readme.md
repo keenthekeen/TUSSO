@@ -12,13 +12,13 @@ Please read the contribution guide before contributing any changes.
 - Also works during directory server shortage, using local database
 - Allow new student to register for temporary account by working with TUENT applicant database
 - Allow applications to search for user id using name and vice-versa
-- [ ] Implemented OpenID Connect Discovery (Not fully comply with the specification yet)
-- [ ] Implemented (partially) single sign-out. (For now, it cannot logout user from other apps)
+- Implemented OpenID Connect Discovery (Not fully comply with the specification yet)
+- Implemented single sign-out. (based on OpenID Connect Session Management, but not comply with)
 
 ### Specification/Standard Compliance
 - OpenID Connect Core 1.0
 - OpenID Connect Discovery 1.0 (Now, partially)
 - JSON Web Token (JWT) (draft)
 - The OAuth 2.0 Authorization Framework: Bearer Token Usage
+- HTTP Authentication: Basic and Digest Access Authentication (RFC2617)
 - [ ] OAuth 2.0 Threat Model and Security Considerations
-- [ ] OpenID Connect Session Management 1.0 (draft)

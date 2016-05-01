@@ -32,4 +32,5 @@ return [
 	'forget_pwd' => 'Change/Forget password?',
 	'forget_instruction' => 'Please contact Computer teacher\'s room, 1st Floor, Building 9.',
 	'tuent_register' => 'Register for temporary account (New students)',
+	'proceed' => 'Proceed',
 ];

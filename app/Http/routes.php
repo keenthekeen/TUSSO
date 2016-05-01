@@ -34,7 +34,7 @@ if (config('tusso.shutdown')) {
 		Route::get('logout', 'UIController@logout');
 
 		Route::get('api/status', 'TUSSOController@proxyAuth');
-		Route::get('logout/remote', 'ProviderController@RemoteLogout');
+		Route::get('openid/logout', 'ProviderController@remoteLogout');
 
 		if (config('tusso.use_tuent')) {
 			Route::get('newstudent_register', function () {
@@ -57,16 +57,22 @@ if (config('tusso.shutdown')) {
 				}
 			});
 			Route::get('session', 'UIController@debugSession');
+			Route::get('log', function () {
+				return view('viewlog');
+			});
 		}
 
 		Route::any('openid/authorize', 'ProviderController@AuthRequest');
-
 	});
 
 	Route::group(['middleware' => ['web', 'auth']], function () {
 		Route::get('account', function () {
 			return view('home');
 		});
+	});
+
+	Route::group(['middleware' => ['session']], function () {
+		Route::any('state_validate', 'TUSSOController@validateSessionState');
 	});
 
 	Route::group(['middleware' => ['api']], function () {

@@ -18,6 +18,7 @@
             <div class="col s12 m9">
                 <h4>{{ trans('messages.error') }}</h4>
                 {{ $error }}<br /><br />
+                <a class="btn waves-effect waves-light red" style="width:100%" href="/">{{ trans('messages.backhome') }}</a>
             </div>
         </div>
     </div>

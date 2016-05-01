@@ -71,6 +71,9 @@ class TUSSOController extends Controller {
 	}
 
 	private function finishedLogin(Request $request) {
+		$request->session()->put('session_state',
+			sha1('TUSSOSessionState:' . $request->user()->username . '-' . microtime()));
+		$request->session()->put('login_time', time());
 		if ($request->has('redirect_queue')) {
 			return redirect($request->input('redirect_queue'));
 		} elseif ($request->session()->has('redirect_queue')) {

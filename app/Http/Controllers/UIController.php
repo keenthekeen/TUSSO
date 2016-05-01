@@ -37,9 +37,13 @@ class UIController extends Controller {
 		}
 	}
 
-	public function logout() {
+	public function logout(Request $request) {
 		Auth::logout();
-		return redirect('/')->with('notify', trans('messages.loggedout'));
+		$locale = $request->session()->get('locale', 'th');
+		$request->session()->flush();
+		$request->session()->put('locale', $locale);
+		//return redirect('/')->with('notify', trans('messages.loggedout'));
+		return view('loggedout');
 	}
 
 	public function debugSession (Request $request) {
