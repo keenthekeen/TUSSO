@@ -423,13 +423,10 @@ class ProviderController extends Controller {
 			$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
 			$vdata->setIssuer(config('tusso.url'));
 			$signer = new Sha256();
-			$vdata->setCurrentTime(time() - 1000);
-			if (!$token->validate($vdata)) {
-				return view('auth-error', ['error' => 'Expired identity token']);
-			}
 			if (!$client = Application::find(str_replace('https://', '', $token->getClaim('aud')))) {
 				return view('auth-error', ['error' => 'Invalid identity token (CLI)']);
-			} elseif (!$token->verify($signer, $client->secret)) {
+			}
+			if (!$token->verify($signer, $client->secret)) {
 				return view('error', ['error' => 'Invalid identity token (SIG)']);
 			}
 
@@ -443,7 +440,8 @@ class ProviderController extends Controller {
 			$request->session()->flush();
 			$request->session()->put('locale', $locale);
 
-			return redirect($request->input('post_logout_redirect_uri').(str_contains($request->input('post_logout_redirect_uri'), '?') ? '&' : '?').'state='.$request->input('state'));
+			return redirect($request->input('post_logout_redirect_uri') . (str_contains($request->input('post_logout_redirect_uri'),
+					'?') ? '&' : '?') . 'state=' . $request->input('state'));
 		} else {
 			return (new UIController)->logout($request);
 		}
