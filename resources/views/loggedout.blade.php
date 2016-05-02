@@ -16,7 +16,8 @@
         </div>
         <div class="row">
             <h4>{{ trans('messages.loggedout') }}</h4><br/>
-            <a class="btn waves-effect waves-light red" style="width:100%" href="/" id="tBack">{{ trans('messages.proceed') }}</a>
+            <a class="btn waves-effect waves-light red" style="width:100%" href="/"
+               id="tBack">{{ trans('messages.proceed') }}</a>
         </div>
     </div>
 @endsection
@@ -35,5 +36,9 @@
                 }
             }, 1000);
         });
+
+        if (navigator.credentials) {
+            navigator.credentials.requireUserMediation();
+        }
     </script>
 @endsection

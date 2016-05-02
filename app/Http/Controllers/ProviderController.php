@@ -208,7 +208,7 @@ class ProviderController extends Controller {
 			->setId('TUSSO-AUTHCODE-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
 				true)// Configures the id (jti claim), replicating as a header item
 			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
-			->setExpiration(time() + 900)// Configures the expiration time of the token (exp claim)
+			->setExpiration(time() + 90)// Configures the expiration time of the token (exp claim)
 			->set('user', $user->username)->set('client_id', $request->input('client_id'))->set('scope',
 				$requested_scope)->getToken(); // Retrieves the generated token
 			

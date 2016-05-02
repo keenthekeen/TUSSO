@@ -48,21 +48,23 @@ class TUSSOController extends Controller {
 						Log::warning(Auth::user()->username . ' tried to log in from ' . $this->getIPAddress($request) . ' but has some problem, denied access.');
 						Auth::logout();
 
-						return view('auth-error', ['error' => trans('messages.userdenied')]);
+						if ($request->ajax()) {
+							return response()->json(['error' => trans('messages.userdenied')]);
+						} else {
+							return view('auth-error', ['error' => trans('messages.userdenied')]);
+						}
 					}
 				}
 			} catch (\Exception $e) {
 				if (!$this->manualLogin($request->username, $request->password, $request)) {
-					Log::error('Authentication failed (probably caused by unreachable LDAP server)');
+					Log::error('Authentication failed (probably caused by unreachable directory server)');
 
-					return redirect('/login')->with('error_message', trans('messages.ldapfail'))->with('redirect_queue',
-						$request->input('redirect_queue', ''));
+					return $this->returnLoginError($request, trans('messages.ldapfail'));
 				}
 			}
 		} else {
 			if (!$this->manualLogin($request->username, $request->password, $request)) {
-				return redirect('/login')->with('error_message', trans('messages.ldapofffail'))->with('redirect_queue',
-					$request->input('redirect_queue', ''));
+				return $this->returnLoginError($request, trans('messages.ldapofffail'));
 			}
 		}
 
@@ -75,14 +77,14 @@ class TUSSOController extends Controller {
 			sha1('TUSSOSessionState:' . $request->user()->username . '-' . microtime()));
 		$request->session()->put('login_time', time());
 		if ($request->has('redirect_queue')) {
-			return redirect($request->input('redirect_queue'));
+			return $this->returnLoginSuccess($request, $request->input('redirect_queue'));
 		} elseif ($request->session()->has('redirect_queue')) {
 			$redirect = $request->session()->get('redirect_queue');
 			$request->session()->forget('redirect_queue');
 
-			return redirect($redirect);
+			return $this->returnLoginSuccess($request, $redirect);
 		} else {
-			return redirect('/')->with('notify', trans('messages.loginsuccess'));
+			return $this->returnLoginSuccess($request, '/account');
 		}
 	}
 
@@ -98,6 +100,21 @@ class TUSSOController extends Controller {
 		}
 
 		return false;
+	}
+
+	private function returnLoginError (Request $request, $error) {
+		if ($request->ajax()) {
+			return response()->json(['error' => $error]);
+		} else {
+			return redirect('/login')->with('error_message', $error)->with('redirect_queue', $request->input('redirect_queue', ''));
+		}
+	}
+	private function returnLoginSuccess (Request $request, $redirect) {
+		if ($request->ajax()) {
+			return response()->json(['redirect' => $redirect]);
+		} else {
+			return redirect($redirect)->with('notify', trans('messages.loginsuccess'));
+		}
 	}
 
 	/*

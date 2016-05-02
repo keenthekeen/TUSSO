@@ -45,6 +45,18 @@ if (config('tusso.shutdown')) {
 			});
 		}
 
+		Route::any('openid/authorize', 'ProviderController@AuthRequest');
+	});
+
+	Route::group(['middleware' => ['web', 'auth']], function () {
+		Route::get('account', function () {
+			return view('home');
+		});
+	});
+
+	Route::group(['middleware' => ['session']], function () {
+		Route::any('state_validate', 'TUSSOController@validateSessionState');
+
 		//DEBUGGING PURPOSE
 		if (config('app.debug')) {
 			Route::get('/view/{id}', function ($id) {
@@ -60,19 +72,8 @@ if (config('tusso.shutdown')) {
 			Route::get('log', function () {
 				return view('viewlog');
 			});
+			Route::any('request', 'UIController@debugRequest');
 		}
-
-		Route::any('openid/authorize', 'ProviderController@AuthRequest');
-	});
-
-	Route::group(['middleware' => ['web', 'auth']], function () {
-		Route::get('account', function () {
-			return view('home');
-		});
-	});
-
-	Route::group(['middleware' => ['session']], function () {
-		Route::any('state_validate', 'TUSSOController@validateSessionState');
 	});
 
 	Route::group(['middleware' => ['api']], function () {

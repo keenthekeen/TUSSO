@@ -14,11 +14,13 @@ Please read the contribution guide before contributing any changes.
 - Allow applications to search for user id using name and vice-versa
 - Implemented OpenID Connect Discovery (Not fully comply with the specification yet)
 - Implemented single sign-out. (based on OpenID Connect Session Management, but not comply with)
+- Utilize Credential Management API, making sign-in more easy for Chrome 51+ users.
 
 ### Specification/Standard Compliance
 - OpenID Connect Core 1.0
 - OpenID Connect Discovery 1.0 (Now, partially)
-- JSON Web Token (JWT) (draft)
 - The OAuth 2.0 Authorization Framework: Bearer Token Usage
+- OAuth 2.0 Threat Model and Security Considerations (RFC6819)
 - HTTP Authentication: Basic and Digest Access Authentication (RFC2617)
-- [ ] OAuth 2.0 Threat Model and Security Considerations
+- JSON Web Token (JWT) (draft)
+- Credential Management Level 1 (W3C Working Draft, 25 April 2016)

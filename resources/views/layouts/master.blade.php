@@ -30,6 +30,10 @@
         main {
             flex: 1 0 auto;
             min-height: 400px;
+            opacity:0;
+        }
+        nav, footer {
+            opacity:1;
         }
 
         .page-footer a:hover {
@@ -102,6 +106,7 @@
     <script>
         $(function () {
             $(".button-collapse").sideNav();
+            $("main").fadeTo("slow", 1);
             <?php
             if (session()->has('notify')) {
                 echo 'Materialize.toast("' . session('notify') . '", 4000);';
@@ -111,6 +116,9 @@
                 $('#logo-container').text('{{ trans('messages.shortname') }}');
                 console.log('Navbar title has been decreased');
             }
+            $(window).bind('beforeunload', function(){
+                $("main").fadeTo("fast", 0);
+            });
         });
     </script>
 @show
