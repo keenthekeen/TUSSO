@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App;
 use Auth;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class UIController extends Controller {
 	public function switchLanguage(Request $request) {
@@ -29,11 +28,23 @@ class UIController extends Controller {
 		return Auth::check();
 	}
 
-	public function home() {
+	public function home(Request $request) {
 		if ($this->isLoggedIn()) {
-			return view('home');
+			if ($request->has('id')) {
+				// Unifi
+				$request->session()->put('mac', $request->input('id'));
+				$request->session()->put('redirect-url', $request->input('url', config('unifi.default_url')));
+				return (new WifiCoordinator)->unifiAuthorize($request);
+			} else {
+				return view('home');
+			}
 		} else {
-			return view('login');
+			if ($request->has('id')) {
+				// Unifi
+				return (new WifiCoordinator)->unifiInitialize($request);
+			} else {
+				return view('login');
+			}
 		}
 	}
 

@@ -16,7 +16,7 @@
         </div>
         <div class="row">
             <h4>{{ trans('messages.loggedout') }}</h4><br/>
-            <a class="btn waves-effect waves-light red" style="width:100%" href="/"
+            <a class="btn waves-effect waves-light red" style="width:100%" href="{{ isset($goto) ? $goto : '/' }}"
                id="tBack">{{ trans('messages.proceed') }}</a>
         </div>
     </div>
@@ -26,13 +26,13 @@
     @parent
     <script>
         $(function () {
-            $('#tBack').html('{{ trans('messages.proceed') }} (<span id="tLeft">6</span>)');
-            var tLeft = 5;
+            $('#tBack').html('{{ trans('messages.proceed') }} (<span id="tLeft">5</span>)');
+            var tLeft = 4;
             setInterval(function () {
                 $('#tLeft').text(tLeft);
                 tLeft--;
                 if (tLeft <= 0) {
-                    window.location.assign("/");
+                    window.location.assign($('#tBack').attr('href'));
                 }
             }, 1000);
         });

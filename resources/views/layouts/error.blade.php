@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>{{ trans('messages.error').' - '.trans('messages.name') }}</title>
+    <meta name="google" content="notranslate" />
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="theme-color" content="#ff9800"/>

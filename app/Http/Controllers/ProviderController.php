@@ -29,8 +29,8 @@ class ProviderController extends Controller {
 	 *
 	 * CAUTION: The code designed to work with TLS, so this service and all applications MUST be available in HTTPS.
 	 */
-
-
+	
+	
 	/* Step 1: Client prepares an Authentication Request containing the desired request parameters.
 	 *
 	 * The Authorization Endpoint performs Authentication of the End-User. This is done by sending
@@ -39,8 +39,8 @@ class ProviderController extends Controller {
 	 *
 	 * Communication with the Authorization Endpoint MUST utilize TLS. See Section 16.17 for more information on using TLS.
 	 */
-
-
+	
+	
 	/* Step 2: Authentication Request
 	 *
 	 *  An Authentication Request is an OAuth 2.0 Authorization Request that requests that the End-User be authenticated by the Authorization Server.
@@ -50,7 +50,7 @@ class ProviderController extends Controller {
 	 * If using the HTTP GET method, the request parameters are serialized using URI Query String Serialization, per Section 13.1.
 	 * If using the HTTP POST method, the request parameters are serialized using Form Serialization, per Section 13.2.
 	 */
-
+	
 	public function AuthRequest(Request $request) {
 		// OpenID Connect uses the following OAuth 2.0 request parameters with the Authorization Code Flow:
 		$validator = Validator::make($request->all(), [
@@ -64,7 +64,7 @@ class ProviderController extends Controller {
 			 * scope values are separated by space (" ")
 			 */
 			'scope' => 'required',
-
+			
 			/* response_type
 			 *
 			 * REQUIRED. OAuth 2.0 Response Type value that determines the authorization
@@ -74,13 +74,13 @@ class ProviderController extends Controller {
 			 # We implement only some of the type.
 			 */
 			'response_type' => 'required',
-
+			
 			/* client_id
 			 *
 			 * REQUIRED. OAuth 2.0 Client Identifier valid at the Authorization Server.
 			 */
 			'client_id' => 'required',
-
+			
 			/* redirect_uri
 			 *
 			 * REQUIRED. Redirection URI to which the response will be sent.
@@ -91,7 +91,7 @@ class ProviderController extends Controller {
 			 * In implicit flow, https is required.
 			 */
 			'redirect_uri' => 'required',
-
+			
 			/* state
 			 *
 			 * RECOMMENDED. Opaque value used to maintain state between the request and
@@ -99,7 +99,7 @@ class ProviderController extends Controller {
 			 * by cryptographically binding the value of this parameter with a browser cookie.
 			 */
 			'state' => '',
-
+			
 			/* response_mode
 			 *
 			 * OPTIONAL. Informs the Authorization Server of the mechanism to be used
@@ -107,7 +107,7 @@ class ProviderController extends Controller {
 			 *
 			 # Not Implemented
 			 */
-
+			
 			/* nonce
 			 *
 			 * OPTIONAL. String value used to associate a Client session with an ID Token,
@@ -119,7 +119,7 @@ class ProviderController extends Controller {
 			 * In implicit flow, this is required.
 			 */
 			'nonce' => 'required_if:response_type,id_token',
-
+			
 			/* prompt
 			 *
 			 * OPTIONAL. Space delimited, case sensitive list of ASCII string values that specifies
@@ -129,23 +129,23 @@ class ProviderController extends Controller {
 			 # We will only implement NULL or "login".
 			 */
 			'prompt' => '',
-
+			
 			/*
 			 * The other fields are ignored
 			 * including max_age, ui_locales, id_token_hint, login_hint, acr_values.
 			 */
 		]);
-
+		
 		if ($validator->fails()) {
 			return view('auth-error', ['error' => 'MALFORMED_AUTHENTICATION_REQUEST']);
 		}
-
+		
 		if ($app = Application::find($request->input('client_id'))) {
 			if ($allowed_uri = explode(',', $app->redirect_uri)) {
 				if (!in_array(rtrim($request->input('redirect_uri'), '/'), $allowed_uri)) {
 					return view('auth-error', ['error' => 'NOT_ALLOWED_REDIRECT_URI']);
 				}
-
+				
 				$allowed_scope = explode(' ', $app->scope);
 				$requested_scope = explode(' ', $request->input('scope'));
 				if (count(array_intersect($allowed_scope, $requested_scope)) < count($requested_scope)) {
@@ -158,7 +158,7 @@ class ProviderController extends Controller {
 		} else {
 			return view('auth-error', ['error' => 'CLIENT_ID_NOT_FOUND']);
 		}
-
+		
 		/* Step 3: Authorization Server Authenticates End-User
 		 *
 		 * If the request is valid, the Authorization Server attempts to Authenticate the End-User
@@ -172,7 +172,7 @@ class ProviderController extends Controller {
 		 *   In this case, the Authorization Server MUST reauthenticate the End-User even
 		 *   if the End-User is already authenticated.
 		 */
-
+		
 		if ($request->input('prompt', 'NULL') == 'login') {
 			// Client wants us to re-authenticate.
 			Auth::logout();
@@ -184,16 +184,16 @@ class ProviderController extends Controller {
 			// User not authenticated.
 			// After logged in, makes the user redirected back here again.
 			//$request->session()->put('redirect_queue', $request->fullUrl());
-
+			
 			return redirect('/login')->with('notify', trans('messages.pleaselogin'))->with('redirect_queue',
 				$request->fullUrl());
 		}
-
+		
 		/* Step 4: Authorization Server Obtains End-User Consent/Authorization
 		 *
 		 * We allowed only trusted client to access our api, so let's skip this.
 		 */
-
+		
 		/*
 		 * Step 5: Successful Authentication Response
 		 */
@@ -202,7 +202,7 @@ class ProviderController extends Controller {
 		$data = array();
 		$respType = explode(' ', $request->input('response_type', 'NULL'));
 		if (in_array('code', $respType)) {
-
+			
 			//Create authorization token.
 			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
 			->setId('TUSSO-AUTHCODE-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
@@ -216,11 +216,11 @@ class ProviderController extends Controller {
 			$data['state'] = $request->input('state', '');
 		}
 		if (in_array('id_token', $respType)) {
-
+			
 			//Create JWT ID token, containing user's basic info, signed with app secret.
 			$token = $this->createIDToken($user, $app, $request->input('nonce', ''),
 				$request->session()->get('session_state', ''));
-
+			
 			// We send user's info to client in JWT, which is not encrypted, so using of TLS is highly recommended and avoid sensitive data being sent.
 			$data['id_token'] = $token;
 			$data['state'] = $request->input('state', '');
@@ -229,11 +229,11 @@ class ProviderController extends Controller {
 			return view('auth-error', ['error' => 'NOT_IMPLEMENTED_RESPONSE_TYPE']);
 		}
 		Log::debug($user->username . ' logging into ' . $request->input('client_id'));
-
+		
 		return view('auth-forward', ['goto' => $request->input('redirect_uri'), 'data' => $data]);
 	}
-
-
+	
+	
 	/*
 	 * Section 3.1.3.
 	 * Token Endpoint
@@ -247,7 +247,7 @@ class ProviderController extends Controller {
 		if ($validator->fails()) {
 			return response()->json(['error' => 'invalid_request', 'error_description' => 'Request malformed'], 400);
 		}
-
+		
 		if ($clientCredential = $this->getClientCredential($request)) {
 			if ($client = Application::find($clientCredential['id'])) {
 				if ($client->secret != $clientCredential['secret']) {
@@ -274,7 +274,7 @@ class ProviderController extends Controller {
 				'error_description' => 'No client credential found'
 			], 401);
 		}
-
+		
 		// Parse & validate JWT
 		if (!$dec = $this->decrypt($request->input('code'))) {
 			return response()->json(['error' => 'invalid_client', 'error_description' => 'Invalid authorization code'],
@@ -290,9 +290,9 @@ class ProviderController extends Controller {
 			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Stolen authorization code'],
 				400);
 		}
-
+		
 		//If possible, verify that the Authorization Code has not been previously used.
-
+		
 		// Now, client is authenticated and token is valid.
 		if (!$user = User::find($token->getClaim('user'))) {
 			// User not found, nearly impossible to happens.
@@ -300,7 +300,7 @@ class ProviderController extends Controller {
 				400);
 		}
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ', User:' . $user->username . ')');
-
+		
 		return response()->json([
 			'access_token' => $this->issueAccessToken($client->name, $token->getClaim('scope'), $user->username),
 			'token_type' => 'Bearer',
@@ -308,7 +308,7 @@ class ProviderController extends Controller {
 			'id_token' => $this->createIDToken($user, $client)
 		]);
 	}
-
+	
 	/* publishConfig()
 	 *
 	 * responds OpenID Connect Discovery request.
@@ -327,13 +327,13 @@ class ProviderController extends Controller {
 			'x_check_session_iframe' => config('tusso.url') . '/state_validate',
 		));
 	}
-
-
+	
+	
 	/*
 	 * ACCESS TOKEN RETRIEVING FLOW
 	 * the following methods will be called during access token issuing process.
 	 */
-
+	
 	/*
 	 * getChallenge()
 	 *
@@ -355,10 +355,10 @@ class ProviderController extends Controller {
 		->set('client', $appname)->set('challenge', sha1(microtime() . rand() . rand(0, 999999)))->sign($signer,
 			config('app.key'))// creates a signature
 		->getToken(); // Retrieves the generated token
-
+		
 		return $token;
 	}
-
+	
 	/*
 	 * verifyResponse()
 	 *
@@ -369,7 +369,7 @@ class ProviderController extends Controller {
 		if (!$request->has('challenge') || !$request->has('response')) {
 			return response('MALFORMED_REQUEST', 400);
 		}
-
+		
 		// Parse & validate JWT
 		$token = (new Parser())->parse((string)$request->input('challenge'));
 		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
@@ -380,7 +380,7 @@ class ProviderController extends Controller {
 		} elseif (!$token->verify($signer, config('app.key'))) {
 			return response('MODIFIED_CHALLENGE', 400);
 		}
-
+		
 		// Get client info
 		if ($client = Application::find(trim($token->getClaim('client')))) {
 			if (hash('sha256',
@@ -393,10 +393,10 @@ class ProviderController extends Controller {
 			return response('NON_EXISTENT_CLIENT', 400);
 		}
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ')');
-
+		
 		return $this->issueAccessToken($client->name, explode(',', $client->scope), '*');
 	}
-
+	
 	/* validateSessionState()
 	 *
 	 * match requested session_state with session.
@@ -404,7 +404,7 @@ class ProviderController extends Controller {
 	public function validateSessionState(Request $request) {
 		return ($request->input('session_state') == $request->session()->get('session_state')) ? 'valid' : 'invalid';
 	}
-
+	
 	/* remoteLogout()
 	 *
 	 * handle RP-Initiated Logout (OpenID Connect Session Management), receive following parameters:
@@ -419,7 +419,7 @@ class ProviderController extends Controller {
 			if (!$request->has('id_token_hint')) {
 				return view('auth-error', ['error' => 'Please specify ID token.']);
 			}
-			$token = (new Parser())->parse((string)$request->input('id_token_hint'));
+			/*$token = (new Parser())->parse((string)$request->input('id_token_hint'));
 			$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
 			$vdata->setIssuer(config('tusso.url'));
 			$signer = new Sha256();
@@ -429,30 +429,32 @@ class ProviderController extends Controller {
 			if (!$token->verify($signer, $client->secret)) {
 				return view('error', ['error' => 'Invalid identity token (SIG)']);
 			}
-
+			
 			$parse = parse_url($request->input('post_logout_redirect_uri'));
 			if ($parse['host'] != str_replace('https://', '', $token->getClaim('aud'))) {
 				return view('auth-error', ['error' => 'Unauthorized redirect URL']);
-			}
-
+			}*/
+			
 			Auth::logout();
 			$locale = $request->session()->get('locale', 'th');
 			$request->session()->flush();
 			$request->session()->put('locale', $locale);
-
-			return redirect($request->input('post_logout_redirect_uri') . (str_contains($request->input('post_logout_redirect_uri'),
-					'?') ? '&' : '?') . 'state=' . $request->input('state'));
+			
+			$redir = $request->input('post_logout_redirect_uri') . (str_contains($request->input('post_logout_redirect_uri'),
+					'?') ? '&' : '?') . 'state=' . $request->input('state');
+			
+			return view('loggedout', ['goto' => $redir]);
 		} else {
 			return (new UIController)->logout($request);
 		}
 	}
-
-
+	
+	
 	/*
 	 * SUPPORTIVE FUNCTIONS
 	 * the following methods shouldn't be called directly from outside.
 	 */
-
+	
 	private function createIDToken($user, $app, $nonce = '', $session_state = '') {
 		//Create JWT ID token, containing user's basic info, signed with app secret.
 		$signer = new Sha256();
@@ -469,22 +471,22 @@ class ProviderController extends Controller {
 			$app->secret)->getToken(); // Retrieves the generated token
 		return (String)$token;
 	}
-
+	
 	private function encrypt($secret) {
 		// Encrypt using OpenSSL and the AES-256-CBC cipher, signed with MAC.
 		return Crypt::encrypt($secret);
 	}
-
+	
 	private function decrypt($alien) {
 		try {
 			$decrypted = Crypt::decrypt($alien);
 		} catch (DecryptException $e) {
 			$decrypted = false;
 		}
-
+		
 		return $decrypted;
 	}
-
+	
 	/*
 	 * issueAccessToken()
 	 *
@@ -496,7 +498,7 @@ class ProviderController extends Controller {
 		//Create JWT access token, grant access to all user.
 		$signer = new \Lcobucci\JWT\Signer\Rsa\Sha256();
 		$privateKey = new Key(Storage::get('private.key'));
-
+		
 		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
 		->setAudience('https://' . $appname)// Configures the audience (aud claim)
 		->setId('TUSSO-AT-' . sha1($appname . microtime() . rand(10, 99)),
@@ -509,13 +511,13 @@ class ProviderController extends Controller {
 			$privateKey)->getToken(); // Retrieves the generated token
 		return (String)$token;
 	}
-
+	
 	public function getClientCredential(Request $request) {
 		if ($request->has('client_id') && $request->has('client_secret')) {
 			// "client_secret_post" (including the Client Credentials in the request body)
 			$client_id = $request->input('client_id');
 			$client_secret = $request->input('client_secret');
-
+			
 			// "client_secret_basic" (using of the HTTP Basic authentication scheme)
 			/*} else {
 			$headers = apache_request_headers(); // Don't worry, this function also works with FastCGI in PHP5.4+
@@ -531,7 +533,7 @@ class ProviderController extends Controller {
 		} else {
 			return false;
 		}
-
+		
 		return ['id' => $client_id, 'secret' => $client_secret];
 	}
 }

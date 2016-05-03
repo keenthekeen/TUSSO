@@ -4,6 +4,7 @@
     <title>{{ trans('messages.name') }}</title>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="google" content="notranslate" />
     <meta name="theme-color" content="#ff9800"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
