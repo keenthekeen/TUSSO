@@ -116,7 +116,7 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
                                     "X-CSRF-TOKEN": $('#csrftoken').val(),
                                     "X-Requested-With": 'XMLHttpRequest'
                                 });
-                                fetch("/login?redirect_queue=" + $("#iRedir").val() + "&mac=" + $("#iMac").val(), {
+                                fetch("/login?redirect_queue=" + encodeURI($("#iRedir").val()) + "&mac=" + encodeURI($("#iMac").val()), {
                                     credentials: credential,
                                     method: "POST",
                                     headers: myHeaders
