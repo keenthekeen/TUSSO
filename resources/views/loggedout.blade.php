@@ -8,6 +8,10 @@
     nav {box-shadow:none}
 @endsection
 
+<?php
+$goout = true;
+?>
+
 @section('content')
     <div class="z-depth-1 card-panel center-align" style="max-width:500px;margin: 3rem auto auto;">
         <div class="row">

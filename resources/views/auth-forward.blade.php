@@ -20,6 +20,7 @@
                 <?php
                 $parse = parse_url($goto);
                 echo $parse['host'];
+                $goout = true;
                 ?><br /><br />
                 <form method="post" action="{{ $goto }}" id="postRedir">
                     <?php

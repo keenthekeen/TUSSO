@@ -52,7 +52,9 @@ if (config('tusso.shutdown')) {
 		Route::get('account', function () {
 			return view('home');
 		});
-		Route::get('unifi/auth', 'WifiCoordinator@unifiAuthorize');
+		if (config('unifi.switch')) {
+			Route::get('unifi/auth', 'WifiCoordinator@unifiAuthorize');
+		}
 	});
 
 	Route::group(['middleware' => ['session']], function () {

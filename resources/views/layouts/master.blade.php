@@ -4,7 +4,7 @@
     <title>{{ trans('messages.name') }}</title>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="google" content="notranslate" />
+    <meta name="google" content="notranslate"/>
     <meta name="theme-color" content="#ff9800"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
@@ -18,12 +18,12 @@
         }
 
         body {
-        <?php
-        if (App::isLocale('th')) {
-            echo 'font-family: "THSarabunNew", Sans-Serif !important;';
-            }
-        ?>
-            display: flex;
+            <?php
+            if (App::isLocale('th')) {
+                echo 'font-family: "THSarabunNew", Sans-Serif !important;';
+                }
+            ?>
+                 display: flex;
             min-height: 100vh;
             flex-direction: column;
         }
@@ -31,10 +31,11 @@
         main {
             flex: 1 0 auto;
             min-height: 400px;
-            opacity:0;
+            opacity: 0;
         }
+
         nav, footer {
-            opacity:1;
+            opacity: 1;
         }
 
         .page-footer a:hover {
@@ -91,10 +92,11 @@
     <footer class="page-footer orange">
         <div class="footer-copyright">
             <div class="container">
-                {{ trans('messages.organization') }} | {{ trans('messages.copyright') }} | <a href="/switch_lang">{{ trans('messages.switchlang') }}</a>
+                {{ trans('messages.organization') }} | {{ trans('messages.copyright') }} | <a
+                        href="/switch_lang">{{ trans('messages.switchlang') }}</a>
                 <?php
-                    $uicontroller = new \App\Http\Controllers\UIController();
-                if ($uicontroller->isLoggedIn()) echo ' | <a href="/logout">'.trans('messages.logout').'</a>';
+                $uicontroller = new \App\Http\Controllers\UIController();
+                if ($uicontroller->isLoggedIn()) echo ' | <a href="/logout">' . trans('messages.logout') . '</a>';
                 ?>
             </div>
         </div>
@@ -108,18 +110,18 @@
         $(function () {
             $(".button-collapse").sideNav();
             $("main").fadeTo("slow", 1);
-            <?php
-            if (session()->has('notify')) {
-                echo 'Materialize.toast("' . session('notify') . '", 4000);';
-            }
-            ?>
+            @if (session()->has('notify'))
+                Materialize.toast("{{session('notify')}}", 4000);
+            @endif
             if ($(window).width() < 550) {
                 $('#logo-container').text('{{ trans('messages.shortname') }}');
                 console.log('Navbar title has been decreased');
             }
-            $(window).bind('beforeunload', function(){
+            @if (empty($goout))
+            $(window).bind('beforeunload', function () {
                 $("main").fadeTo("fast", 0);
             });
+            @endif
         });
     </script>
 @show

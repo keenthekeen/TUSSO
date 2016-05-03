@@ -30,7 +30,7 @@ class UIController extends Controller {
 
 	public function home(Request $request) {
 		if ($this->isLoggedIn()) {
-			if ($request->has('id')) {
+			if ($request->has('id') && config('unifi.switch')) {
 				// Unifi
 				$request->session()->put('mac', $request->input('id'));
 				$request->session()->put('redirect-url', $request->input('url', config('unifi.default_url')));
@@ -39,7 +39,7 @@ class UIController extends Controller {
 				return view('home');
 			}
 		} else {
-			if ($request->has('id')) {
+			if ($request->has('id') && config('unifi.switch')) {
 				// Unifi
 				return (new WifiCoordinator)->unifiInitialize($request);
 			} else {

@@ -15,6 +15,7 @@ Please read the contribution guide before contributing any changes.
 - Implemented OpenID Connect Discovery (Not fully comply with the specification yet)
 - Implemented single sign-out. (based on OpenID Connect Session Management, but not comply with)
 - Utilize Credential Management API, making sign-in more easy for Chrome 51+ users.
+- Can be used as Captive Portal Auth for Unifi AP
 
 ### Specification/Standard Compliance
 - OpenID Connect Core 1.0
