@@ -460,7 +460,7 @@ class ProviderController extends Controller {
 		$signer = new Sha256();
 		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
 		->setAudience('https://' . $app->name)// Configures the audience (aud claim)
-		->setId('TUSSO-ID-' . $user->username . '-' . microtime() . rand(10, 99),
+		->setId('TUSSO-ID-' . $user->username . '-' . microtime(true) . rand(10, 99),
 			true)// Configures the id (jti claim), replicating as a header item
 		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
