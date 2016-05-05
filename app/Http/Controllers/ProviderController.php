@@ -208,7 +208,7 @@ class ProviderController extends Controller {
 			->setId('TUSSO-AUTHCODE-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
 				true)// Configures the id (jti claim), replicating as a header item
 			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
-			->setExpiration(time() + 90)// Configures the expiration time of the token (exp claim)
+			->setExpiration(time() + 300)// Configures the expiration time of the token (exp claim)
 			->set('user', $user->username)->set('client_id', $request->input('client_id'))->set('scope',
 				$requested_scope)->getToken(); // Retrieves the generated token
 			
@@ -242,7 +242,6 @@ class ProviderController extends Controller {
 		$validator = Validator::make($request->all(), [
 			'grant_type' => 'required|in:authorization_code',
 			'code' => 'required',
-			//'redirect_uri' => 'required|url'
 		]);
 		if ($validator->fails()) {
 			return response()->json(['error' => 'invalid_request', 'error_description' => 'Request malformed'], 400);
@@ -463,7 +462,7 @@ class ProviderController extends Controller {
 		->setId('TUSSO-ID-' . $user->username . '-' . microtime(true) . rand(10, 99),
 			true)// Configures the id (jti claim), replicating as a header item
 		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
-		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
+		->setNotBefore(time() - 60)// Configures the time that the token can be used (nbf claim) -- set to minus to help server with inaccurate time
 		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim) -- Client should set their session expiration time to this
 		->set('id', $user->username)// Configures a new claim
 		->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
