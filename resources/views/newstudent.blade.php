@@ -48,7 +48,7 @@
                 <div class="input-field col s12 m6">
                     <i class="mdi-social-person prefix"></i>
                     <input id="fname" type="text" name="fname"
-                           class="" required/>
+                           class="validate" required/>
                     <label for="fname">ชื่อตัว</label>
                 </div>
                 <div class="input-field col s12 m6">
@@ -65,7 +65,7 @@
                     <label for="citizenid">รหัสประจำตัวประชาชน</label>
                 </div>
                 <div class="input-field col s12 m6">
-                    <select name="plan" id="plan">
+                    <!-- select name="plan" id="plan">
                         <option value="" disabled selected>เลือกแผนการเรียน</option>
                         <option value="5">วิทย์-คณิต</option>
                         <option value="4">ภาษา-คณิต</option>
@@ -75,7 +75,10 @@
                         <option value="7">ภาษา-สเปน</option>
                         <option value="8">ภาษา-จีน</option>
                     </select>
-                    <label>แผนการเรียน</label>
+                    <label>แผนการเรียน</label -->
+                    <input id="room" type="number" name="room"
+                           class="validate" required min="10" max="947"/>
+                    <label for="room">ห้อง</label>
                 </div>
             </div>
 
@@ -168,8 +171,8 @@
     @parent
     <script>
         $(document).ready(function () {
-            $('#fname, #lname, #citizenid, #plan, #password, #password_confirmation').prop('disabled', false).removeClass('invalid');
-            $('select').material_select();
+            $('#fname, #lname, #citizenid, #room, #password, #password_confirmation').prop('disabled', false).removeClass('invalid');
+            //$('select').material_select();
 
             var step1 = false;
             $('form').submit(function (event) {
@@ -184,7 +187,8 @@
                             fname: $('#fname').val(),
                             lname: $('#lname').val(),
                             citizenid: $('#citizenid').val(),
-                            plan: $('#plan').val(),
+                            //plan: $('#plan').val(),
+                            room: $('#room').val(),
                             password: $('#password').val(),
                             password_confirmation: $('#password_confirmation').val(),
                             _token: $('input[name="_token"]').val()
@@ -197,8 +201,8 @@
                         dataType: 'json',
                         success: function (data) {
                             if (data.status == 'SUCCEED') {
-                                $('#fname, #lname, #citizenid, #plan, #password, #password_confirmation').prop('disabled', true).removeClass('invalid');
-                                $('select').material_select();
+                                $('#fname, #lname, #citizenid, #room, #password, #password_confirmation').prop('disabled', true).removeClass('invalid');
+                                //$('select').material_select();
                                 $('.userpwd-form').html('<h4>ลงทะเบียนเรียบร้อย ชื่อผู้ใช้ของนักเรียนคือ n' + $('#citizenid').val() + '</h4>').slideDown();
                                 $('#button-div').html('<a class="btn waves-effect waves-light red" href="/" style="width:100%">ออก</button>');
                                 $('.waiting').slideUp();
@@ -210,7 +214,7 @@
                                 $('.waiting').slideUp();
                             } else if (data.status == 'INVALID_INFO') {
                                 Materialize.toast('ชื่อหรือแผนการเรียนไม่ถูกต้อง', 4000);
-                                $('#fname, #lname, #plan').addClass('invalid');
+                                $('#fname, #lname, #room').addClass('invalid');
                                 $('.userinfo-form, .userpwd-form').slideDown();
                                 $('.waiting').slideUp();
                             } else if (data.status == 'MALFORMED_REQUEST') {
@@ -238,7 +242,8 @@
                             fname: $('#fname').val(),
                             lname: $('#lname').val(),
                             citizenid: $('#citizenid').val(),
-                            plan: $('#plan').val(),
+                            //plan: $('#plan').val(),
+                            room: $('#room').val(),
                             _token: $('input[name="_token"]').val()
                         },
                         error: function () {
@@ -249,9 +254,9 @@
                         dataType: 'json',
                         success: function (data) {
                             if (data.status == 'GOOD') {
-                                $('#fname, #lname, #citizenid, #plan').prop('disabled', true);
-                                $('#fname, #lname, #plan').removeClass('invalid');
-                                $('select').material_select();
+                                $('#fname, #lname, #citizenid, #room').prop('disabled', true);
+                                $('#fname, #lname, #room').removeClass('invalid');
+                                //$('select').material_select();
                                 $('#fSubmit').removeClass('blue').addClass('indigo').text('ลงทะเบียน');
                                 $('.userinfo-form').slideDown();
                                 $('.waiting').slideUp();
@@ -259,7 +264,7 @@
                                 step1 = true;
                             } else if (data.status == 'INVALID_INFO') {
                                 Materialize.toast('ชื่อหรือแผนการเรียนไม่ถูกต้อง', 4000);
-                                $('#fname, #lname, #plan').addClass('invalid');
+                                $('#fname, #lname, #room').addClass('invalid');
                                 $('.userinfo-form').slideDown();
                                 $('.waiting').slideUp();
                             } else if (data.status == 'MALFORMED_REQUEST') {

@@ -154,16 +154,19 @@ class TUSSOController extends Controller {
 	/*
 	 * newStudentLogin()
 	 *
-	 * Try to log user in using TUENT's database (for new student who doesn't have an account in directory)
+	 * Try to log user in using new student database (who doesn't have an account in directory server)
+	 * This function expects "newstudent" table, containing fname, lname, nationalid, room
 	 *
-	 * This function expects "tuent_applicant" table containing fname,lname,nationalid,plan_id
+	 * // OBSOLETE Try to log user in using TUENT's database (for new student who doesn't have an account in directory)
+	 * // OBSOLETE This function expects "tuent_applicant" table containing fname,lname,nationalid,plan_id
 	 */
 	public function newStudentRegister(Request $request) {
 		$validator = Validator::make($request->all(), [
 			'fname' => 'required|max:50',
 			'lname' => 'required|max:50',
 			'citizenid' => 'required|digits:13',
-			'plan' => 'required|digits_between:1,8',
+			//'plan' => 'required|digits_between:1,8',
+			'room' => 'required'
 			//'password' => 'confirmed'
 		]);
 
@@ -171,10 +174,10 @@ class TUSSOController extends Controller {
 			return response()->json(['status' => 'MALFORMED_REQUEST']);
 		}
 
-		if ($applicant = DB::table('tuent_applicant')->where('nationalid', $request->input('citizenid'))->first()) {
+		if ($applicant = DB::table('newstudent')->where('nationalid', $request->input('citizenid'))->first()) {
 			if ($user = User::find('n' . $applicant->nationalid)) {
 				return response()->json(['status' => 'USER_EXISTS']);
-			} elseif ($request->fname != $applicant->fname || $request->lname != $applicant->lname || $request->plan != $applicant->plan_id) {
+			} elseif ($request->fname != $applicant->fname || $request->lname != $applicant->lname || $request->room != $applicant->room) {
 				return response()->json(['status' => 'INVALID_INFO']);
 			}
 		} else {
