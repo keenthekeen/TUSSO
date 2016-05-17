@@ -92,8 +92,7 @@
     <footer class="page-footer orange">
         <div class="footer-copyright">
             <div class="container">
-                {{ trans('messages.organization') }} | {{ trans('messages.copyright') }} | <a
-                        href="/switch_lang">{{ trans('messages.switchlang') }}</a>
+                <a href="/switch_lang">{{ trans('messages.switchlang') }}</a> | {{ trans('messages.organization') }} | {{ trans('messages.copyright') }} |
                 <?php
                 $uicontroller = new \App\Http\Controllers\UIController();
                 if ($uicontroller->isLoggedIn()) echo ' | <a href="/logout">' . trans('messages.logout') . '</a>';

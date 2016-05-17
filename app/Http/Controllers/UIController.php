@@ -62,7 +62,7 @@ class UIController extends Controller {
 		dump($request->user());
 	}
 
-	function debugRequest (Request $request) {
+	public function debugRequest (Request $request) {
 		return response()->json($request->all());
 	}
 
