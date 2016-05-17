@@ -12,7 +12,7 @@ return [
 	'login' => 'Log in',
 	'home' => 'Home',
 	'error'=> 'Error occured!',
-	'switchlang' => 'ภาษาไทย',
+	'switchlang' => 'เปลี่ยนภาษา',
 	'pleaselogin' => 'Please log in to continue',
 	'backhome' => 'Back to home',
 	'remember' => 'Remember',

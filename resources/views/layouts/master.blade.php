@@ -23,7 +23,7 @@
                 echo 'font-family: "THSarabunNew", Sans-Serif !important;';
                 }
             ?>
-                 display: flex;
+                  display: flex;
             min-height: 100vh;
             flex-direction: column;
         }
@@ -65,6 +65,15 @@
         .en {
             font-family: 'Roboto', Sans-Serif !important
         }
+
+        .whitelink a {
+            color: #EEEEEE;
+        }
+
+        .whitelink a:hover {
+            color: #FFFFFF;
+            text-decoration: underline;
+        }
         @yield('style')
     </style>
 </head>
@@ -73,7 +82,7 @@
     <nav class="orange" role="navigation">
         <div class="nav-wrapper container">
             <a id="logo-container" href="/" class="brand-logo">{{ trans('messages.name') }}</a>
-            <!-- ul class="right hide-on-med-and-down">
+        <!-- ul class="right hide-on-med-and-down">
                 <li<?= isset($home) ? ' class="active"' : '' ?>><a href="/">{{ trans('messages.home') }}</a></li>
             </ul>
             <ul id="nav-mobile" class="side-nav">
@@ -90,13 +99,16 @@
 
 @section('footer')
     <footer class="page-footer orange">
+        <div class="container whitelink" style="padding-bottom:5px">
+            <a href="/switch_lang">{{ trans('messages.switchlang') }}</a>
+            <?php
+            $uicontroller = new \App\Http\Controllers\UIController();
+            if ($uicontroller->isLoggedIn()) echo ' | <a href="/logout">' . trans('messages.logout') . '</a>';
+            ?>
+        </div>
         <div class="footer-copyright">
             <div class="container">
-                <a href="/switch_lang">{{ trans('messages.switchlang') }}</a> | {{ trans('messages.organization') }} | {{ trans('messages.copyright') }} |
-                <?php
-                $uicontroller = new \App\Http\Controllers\UIController();
-                if ($uicontroller->isLoggedIn()) echo ' | <a href="/logout">' . trans('messages.logout') . '</a>';
-                ?>
+                {{ trans('messages.organization') }} | {{ trans('messages.copyright') }}
             </div>
         </div>
     </footer>

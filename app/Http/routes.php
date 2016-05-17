@@ -37,9 +37,7 @@ if (config('tusso.shutdown')) {
 		Route::get('openid/logout', 'ProviderController@remoteLogout');
 
 		if (config('tusso.use_tuent')) {
-			Route::get('newstudent_register', function () {
-				return view('newstudent');
-			});
+			Route::get('newstudent_register', 'UIController@displayNewRegister');
 			Route::group(['middleware' => 'throttle:15,3'], function () {
 				Route::post('newstudent_register', 'TUSSOController@newStudentRegister');
 			});

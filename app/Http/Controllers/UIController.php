@@ -13,11 +13,16 @@ class UIController extends Controller {
 			$setlang = 'th';
 		}
 
-		$request->session()->put('locale', $setlang);
+		$this->setLanguage($request, $setlang);
 
 		//return $setlang;
-		return back()->with('notify', 'Language changed to '.strtoupper($setlang).'!');
+		return back()->with('notify', 'Language changed to ' . strtoupper($setlang) . '!');
 
+	}
+
+	private function setLanguage(Request $request, $lang) {
+		$request->session()->put('locale', $lang);
+		$this->setLocale($lang);
 	}
 
 	public function setLocale($loc) {
@@ -34,6 +39,7 @@ class UIController extends Controller {
 				// Unifi
 				$request->session()->put('mac', $request->input('id'));
 				$request->session()->put('redirect-url', $request->input('url', config('unifi.default_url')));
+
 				return (new WifiCoordinator)->unifiAuthorize($request);
 			} else {
 				return view('home');
@@ -53,16 +59,23 @@ class UIController extends Controller {
 		$locale = $request->session()->get('locale', 'th');
 		$request->session()->flush();
 		$request->session()->put('locale', $locale);
+
 		//return redirect('/')->with('notify', trans('messages.loggedout'));
 		return view('loggedout');
 	}
 
-	public function debugSession (Request $request) {
+	public function displayNewRegister(Request $request) {
+		$this->setLanguage($request, 'th');
+
+		return view('newstudent');
+	}
+
+	public function debugSession(Request $request) {
 		dump(session()->all());
 		dump($request->user());
 	}
 
-	public function debugRequest (Request $request) {
+	public function debugRequest(Request $request) {
 		return response()->json($request->all());
 	}
 
