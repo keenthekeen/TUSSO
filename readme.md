@@ -2,7 +2,7 @@
 
 The centralized authentication system for Triamudom personnel, based on Laravel 5.2.
 
-*This version of TUSSO utilizes exisiting directory server*
+*This version of TUSSO utilizes existing directory server*
 
 Please read the contribution guide before contributing any changes.
 
