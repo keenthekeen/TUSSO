@@ -2,6 +2,8 @@
 
 The centralized authentication system for Triamudom personnel, based on Laravel 5.2.
 
+*This version of TUSSO utilizes exisiting directory server*
+
 Please read the contribution guide before contributing any changes.
 
 ## Features
@@ -10,9 +12,9 @@ Please read the contribution guide before contributing any changes.
 - Implemented OpenID Connect implicit, authorization code, and hybrid flow as provider (OP)
 - Issues Resource Server (TURS) access tokens (as JWT, signed using RSA)
 - Also works during directory server shortage, using local database
-- Allow new student to register for temporary account by working with TUENT applicant database
+- Allow new student to register for temporary account by working with registration dept. student database
 - Allow applications to search for user id using name and vice-versa
-- Implemented OpenID Connect Discovery (Not fully comply with the specification yet)
+- Implemented OpenID Connect Discovery (Not fully comply with the specification)
 - Implemented single sign-out. (based on OpenID Connect Session Management, but not comply with)
 - Utilize Credential Management API, making sign-in more easy for Chrome 51+ users.
 - Can be used as Captive Portal Auth for Unifi AP
