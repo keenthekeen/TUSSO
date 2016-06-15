@@ -30,9 +30,8 @@ class TUSSOController extends Controller {
 	public function TryLogIn(Request $request) {
 		$this->validate($request, ['username' => 'required', 'password' => 'required']);
 
-		if (config('tusso.use_ldap') && !(config('tusso.use_tuent') && strlen($request->input('username')) == 14 && (substr($request->input('username'),
-						0, 1) == 'n' || substr($request->input('username'), 0,
-						1) == 'N') && is_numeric(substr($request->input('username'), 1, 13)))
+		if (config('tusso.use_ldap') && !(config('tusso.use_tuent') && strlen($request->input('username')) == 14 && (substr($request->input('username'), 0,
+						1) == 'n' || substr($request->input('username'), 0, 1) == 'N') && is_numeric(substr($request->input('username'), 1, 13)))
 		) {
 			try {
 				\Adldap::connect('default');
@@ -54,6 +53,8 @@ class TUSSOController extends Controller {
 							return view('auth-error', ['error' => trans('messages.userdenied')]);
 						}
 					}
+				} else {
+					return $this->returnLoginError($request, trans('messages.loginfail'));
 				}
 			} catch (\Exception $e) {
 				if (!$this->manualLogin($request->username, $request->password, $request)) {
@@ -73,8 +74,7 @@ class TUSSOController extends Controller {
 	}
 
 	private function finishedLogin(Request $request) {
-		$request->session()->put('session_state',
-			sha1('TUSSOSessionState:' . $request->user()->username . '-' . microtime()));
+		$request->session()->put('session_state', sha1('TUSSOSessionState:' . $request->user()->username . '-' . microtime()));
 		$request->session()->put('login_time', time());
 		if ($request->has('redirect_queue')) {
 			return $this->returnLoginSuccess($request, $request->input('redirect_queue'));
@@ -102,14 +102,15 @@ class TUSSOController extends Controller {
 		return false;
 	}
 
-	private function returnLoginError (Request $request, $error) {
+	private function returnLoginError(Request $request, $error) {
 		if ($request->ajax()) {
 			return response()->json(['error' => $error]);
 		} else {
 			return redirect('/login')->with('error_message', $error)->with('redirect_queue', $request->input('redirect_queue', ''));
 		}
 	}
-	private function returnLoginSuccess (Request $request, $redirect) {
+
+	private function returnLoginSuccess(Request $request, $redirect) {
 		if ($request->ajax()) {
 			return response()->json(['redirect' => $redirect]);
 		} else {
@@ -221,19 +222,15 @@ class TUSSOController extends Controller {
 	 */
 	public function proxyAuth() {
 		if (Auth::check()) {
-			return response('AUTHENTICATED', 200)->header('X-AccessRight',
-				'TUSSO_GRANTED')->header('Access-Control-Allow-Origin', '*');
+			return response('AUTHENTICATED', 200)->header('X-AccessRight', 'TUSSO_GRANTED')->header('Access-Control-Allow-Origin', '*');
 		} else {
-			return response('UNAUTHORIZED', 403)->header('X-AccessRight', '')->header('Access-Control-Allow-Origin',
-				'*');
+			return response('UNAUTHORIZED', 403)->header('X-AccessRight', '')->header('Access-Control-Allow-Origin', '*');
 		}
 	}
 
 	public function apiSearch(Request $request) {
 		if ($request->has('keyword')) {
-			if ($quser = User::where('name', 'LIKE', '%' . $request->keyword . '%')->orWhere('username', 'LIKE',
-				'%' . $request->keyword . '%')->first()
-			) {
+			if ($quser = User::where('name', 'LIKE', '%' . $request->keyword . '%')->orWhere('username', 'LIKE', '%' . $request->keyword . '%')->first()) {
 				return response()->json([
 					'name' => $quser->name,
 					'id' => $quser->username
