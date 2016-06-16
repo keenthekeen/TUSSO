@@ -185,8 +185,9 @@ class ProviderController extends Controller {
 			// After logged in, makes the user redirected back here again.
 			//$request->session()->put('redirect_queue', $request->fullUrl());
 			
-			return redirect('/login')->with('notify', trans('messages.pleaselogin'))->with('redirect_queue',
-				$request->fullUrl());
+			$request->session()->set('redirect_queue', $request->fullUrl());
+			
+			return redirect('/login')->with('notify', trans('messages.pleaselogin'));
 		}
 		
 		/* Step 4: Authorization Server Obtains End-User Consent/Authorization
@@ -205,12 +206,10 @@ class ProviderController extends Controller {
 			
 			//Create authorization token.
 			$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
-			->setId('TUSSO-AUTHCODE-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99),
-				true)// Configures the id (jti claim), replicating as a header item
+			->setId('TUSSO-AUTHCODE-' . substr(sha1($user->username . microtime() . rand()), 0, 10) . rand(10, 99), true)// Configures the id (jti claim), replicating as a header item
 			->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 			->setExpiration(time() + 300)// Configures the expiration time of the token (exp claim)
-			->set('user', $user->username)->set('client_id', $request->input('client_id'))->set('scope',
-				$requested_scope)->getToken(); // Retrieves the generated token
+			->set('user', $user->username)->set('client_id', $request->input('client_id'))->set('scope', $requested_scope)->getToken(); // Retrieves the generated token
 			
 			$data['code'] = $this->encrypt($token);
 			$data['state'] = $request->input('state', '');
@@ -218,8 +217,7 @@ class ProviderController extends Controller {
 		if (in_array('id_token', $respType)) {
 			
 			//Create JWT ID token, containing user's basic info, signed with app secret.
-			$token = $this->createIDToken($user, $app, $request->input('nonce', ''),
-				$request->session()->get('session_state', ''));
+			$token = $this->createIDToken($user, $app, $request->input('nonce', ''), $request->session()->get('session_state', ''));
 			
 			// We send user's info to client in JWT, which is not encrypted, so using of TLS is highly recommended and avoid sensitive data being sent.
 			$data['id_token'] = $token;
@@ -276,18 +274,15 @@ class ProviderController extends Controller {
 		
 		// Parse & validate JWT
 		if (!$dec = $this->decrypt($request->input('code'))) {
-			return response()->json(['error' => 'invalid_client', 'error_description' => 'Invalid authorization code'],
-				400);
+			return response()->json(['error' => 'invalid_client', 'error_description' => 'Invalid authorization code'], 400);
 		}
 		$token = (new Parser())->parse((string)$dec);
 		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
 		$vdata->setIssuer(config('tusso.url'));
 		if (!$token->validate($vdata)) {
-			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Expired authorization code'],
-				400);
+			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Expired authorization code'], 400);
 		} elseif ($token->getClaim('client_id') != $client->name) {
-			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Stolen authorization code'],
-				400);
+			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Stolen authorization code'], 400);
 		}
 		
 		//If possible, verify that the Authorization Code has not been previously used.
@@ -295,8 +290,7 @@ class ProviderController extends Controller {
 		// Now, client is authenticated and token is valid.
 		if (!$user = User::find($token->getClaim('user'))) {
 			// User not found, nearly impossible to happens.
-			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Invalid authorization code'],
-				400);
+			return response()->json(['error' => 'invalid_grant', 'error_description' => 'Invalid authorization code'], 400);
 		}
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ', User:' . $user->username . ')');
 		
@@ -346,13 +340,11 @@ class ProviderController extends Controller {
 		$appname = $request->input('client_id');
 		$signer = new Sha256();
 		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
-		->setId('TUSSO-ATREQ-' . substr(sha1($appname . microtime() . rand()), 0, 10) . rand(10, 99),
-			true)// Configures the id (jti claim), replicating as a header item
+		->setId('TUSSO-ATREQ-' . substr(sha1($appname . microtime() . rand()), 0, 10) . rand(10, 99), true)// Configures the id (jti claim), replicating as a header item
 		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
 		->setExpiration(time() + 90)// To prevent replay attack, but not using database, use fast expiration time, which may break in slow connection.
-		->set('client', $appname)->set('challenge', sha1(microtime() . rand() . rand(0, 999999)))->sign($signer,
-			config('app.key'))// creates a signature
+		->set('client', $appname)->set('challenge', sha1(microtime() . rand() . rand(0, 999999)))->sign($signer, config('app.key'))// creates a signature
 		->getToken(); // Retrieves the generated token
 		
 		return $token;
@@ -382,11 +374,8 @@ class ProviderController extends Controller {
 		
 		// Get client info
 		if ($client = Application::find(trim($token->getClaim('client')))) {
-			if (hash('sha256',
-					trim($request->input('challenge')) . $client->secret) != trim($request->input('response'))
-			) {
-				return response('INVALID_RESPONSE (' . hash('sha256',
-						trim($request->input('challenge')) . $client->secret) . ')', 400);
+			if (hash('sha256', trim($request->input('challenge')) . $client->secret) != trim($request->input('response'))) {
+				return response('INVALID_RESPONSE (' . hash('sha256', trim($request->input('challenge')) . $client->secret) . ')', 400);
 			}
 		} else {
 			return response('NON_EXISTENT_CLIENT', 400);
@@ -439,8 +428,7 @@ class ProviderController extends Controller {
 			$request->session()->flush();
 			$request->session()->put('locale', $locale);
 			
-			$redir = $request->input('post_logout_redirect_uri') . (str_contains($request->input('post_logout_redirect_uri'),
-					'?') ? '&' : '?') . 'state=' . $request->input('state');
+			$redir = $request->input('post_logout_redirect_uri') . (str_contains($request->input('post_logout_redirect_uri'), '?') ? '&' : '?') . 'state=' . $request->input('state');
 			
 			return view('loggedout', ['goto' => $redir]);
 		} else {
@@ -459,14 +447,12 @@ class ProviderController extends Controller {
 		$signer = new Sha256();
 		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
 		->setAudience('https://' . $app->name)// Configures the audience (aud claim)
-		->setId('TUSSO-ID-' . $user->username . '-' . microtime(true) . rand(10, 99),
-			true)// Configures the id (jti claim), replicating as a header item
+		->setId('TUSSO-ID-' . $user->username . '-' . microtime(true) . rand(10, 99), true)// Configures the id (jti claim), replicating as a header item
 		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 		->setNotBefore(time() - 60)// Configures the time that the token can be used (nbf claim) -- set to minus to help server with inaccurate time
 		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim) -- Client should set their session expiration time to this
 		->set('id', $user->username)// Configures a new claim
-		->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce',
-			$nonce)->set('session_state', $session_state)->sign($signer,
+		->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce', $nonce)->set('session_state', $session_state)->sign($signer,
 			$app->secret)->getToken(); // Retrieves the generated token
 		return (String)$token;
 	}
@@ -500,14 +486,12 @@ class ProviderController extends Controller {
 		
 		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
 		->setAudience('https://' . $appname)// Configures the audience (aud claim)
-		->setId('TUSSO-AT-' . sha1($appname . microtime() . rand(10, 99)),
-			true)// Configures the id (jti claim), replicating as a header item
+		->setId('TUSSO-AT-' . sha1($appname . microtime() . rand(10, 99)), true)// Configures the id (jti claim), replicating as a header item
 		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
 		->setNotBefore(time())// Configures the time that the token can be used (nbf claim)
 		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim)
 		->set('client', $appname)// Configures a new claim
-		->set('scope', $appscope)->set('foruser', $foruser)->sign($signer,
-			$privateKey)->getToken(); // Retrieves the generated token
+		->set('scope', $appscope)->set('foruser', $foruser)->sign($signer, $privateKey)->getToken(); // Retrieves the generated token
 		return (String)$token;
 	}
 	
