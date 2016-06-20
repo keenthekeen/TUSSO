@@ -11,7 +11,7 @@ return [
 	'login' => 'เข้าสู่ระบบ',
 	'home' => 'หน้าหลัก',
 	'error'=> 'ผิดพลาด',
-	'switchlang' => 'Change language',
+	'switchlang' => 'Switch language',
 	'pleaselogin' => 'กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ',
 	'backhome' => 'กลับไปยังหน้าหลัก',
 	'remember' => 'จำไว้',

@@ -229,7 +229,12 @@ class ProviderController extends Controller {
 			return view('auth-error', ['error' => 'NOT_IMPLEMENTED_RESPONSE_TYPE']);
 		}
 		Log::debug($user->username . ' logging into ' . $request->input('client_id'));
-		
+
+		if ($request->has('kiosk')) {
+			// Kiosk mode: Don't remember user in session, just authenticate user to an app.
+			Auth::logout();
+			$request->session()->flush();
+		}
 		return view('auth-forward', ['goto' => $request->input('redirect_uri'), 'data' => $data]);
 	}
 	
