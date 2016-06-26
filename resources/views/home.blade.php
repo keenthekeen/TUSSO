@@ -11,18 +11,22 @@
 
 @section('content')
     <?php
-            $user = Auth::user();
+    $user = Auth::user();
     ?>
     <div class="z-depth-1 card-panel" style="max-width:800px;margin: 3rem auto auto;">
         <div class="row">
             <div class="col s12 m3 center-align">
                 {{-- place user profile photo here --}}
-                <i class="large material-icons">perm_identity</i><br />
+                <i class="large material-icons">perm_identity</i><br/>
                 <h5 class="en">{{ strtoupper($user->username) }}</h5>
             </div>
             <div class="col s12 m9">
                 <h4>{{ $user->name }}</h4>
                 {{ trans('messages.type') }}: {{ ($user->type == 'student') ? trans('messages.student') : trans('messages.staff') }} <i class="en">({{ $user->group }})</i>
+                <br/><br />
+                @if (config('tusso.allow_password_change'))
+                    <a class="btn waves-effect waves-light cyan" href="/password/change">{{ trans('messages.change_pwd') }}</a>.
+                @endif
             </div>
         </div>
     </div>

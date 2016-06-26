@@ -40,7 +40,7 @@ return [
 	| Do not include trailing slash (/).
 	*/
 
-	'url' => 'localhost',
+	'url' => 'accounts.triamudom.ac.th',
 
 	/*
 	|--------------------------------------------------------------------------

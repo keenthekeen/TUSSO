@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Adldap\Laravel\AdldapAuthUserProvider;
 use App\User;
 use DB;
+use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Http\Request;
 use Hash;
 use Log;
@@ -13,8 +15,9 @@ use Validator;
 class TUSSOController extends Controller {
 	/*
 	|--------------------------------------------------------------------------
-	| The TUSSO I/O Handler
+	| TUSSO Controller
 	|--------------------------------------------------------------------------
+	| a HTTP controller that handle internal R/W operations
 	*/
 	
 	/*
@@ -210,6 +213,32 @@ class TUSSOController extends Controller {
 			return response()->json(['status' => 'GOOD']);
 		}
 		
+	}
+	
+	public function changePassword (Request $request) {
+		$validator = Validator::make($request->all(), [
+			'oldpassword' => 'required',
+			'password' => 'required|confirmed'
+		]);
+		if ($validator->fails()) {
+			return response('MALFORMED_REQUEST');
+		}
+
+		$user = $request->user();
+		if (Hash::check($request->oldpassword, $user->password)) {
+			// Old password match...
+
+			/*$user->fill([
+				'password' => Hash::make($request->password)
+			])->save();*/
+
+			/*$aduser = (new AdldapAuthUserProvider(new BcryptHasher(), $user))->retrieveById($user->username);
+			$aduser->setPassword('abc123')->save();*/
+
+			return 'WORK_IN_PROGRESS_503';
+		} else {
+			return response('PASSWORD_NOT_MATCH');
+		}
 	}
 	
 	

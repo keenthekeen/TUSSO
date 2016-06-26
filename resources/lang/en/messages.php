@@ -33,4 +33,8 @@ return [
 	'forget_instruction' => 'Please contact Computer teacher\'s room, 1st Floor, Building 9.',
 	'tuent_register' => 'Register for temporary account (New students; Thai)',
 	'proceed' => 'Proceed',
+	'change_pwd' => 'Change password',
+	'old_pwd' => 'Old password',
+	'new_pwd' => 'New password',
+	'confirm' => 'Confirm ',
 ];

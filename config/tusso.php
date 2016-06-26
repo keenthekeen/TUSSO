@@ -15,9 +15,7 @@ return [
 	|--------------------------------------------------------------------------
 	| Shutdown switch
 	|--------------------------------------------------------------------------
-	| During shutdown , web access will be denied and all emails will be sent to specified address.
-	|
-	| Useful when under attack.
+	| During shutdown , web access will be denied.
 	*/
 	'shutdown' => false,
 
@@ -37,8 +35,15 @@ return [
 	 */
 	'use_tuent' => env('TUSSO_ALLOW_TUENT',false),
 
+	/* --------------------------------------------------------------------------
+	 * Allow password change
+	 * --------------------------------------------------------------------------
+	 *  Allow users to change their password
+	 */
+	'allow_password_change' => env('TUSSO_ALLOW_PASSWORD_CHANGE', false),
+
 	/* CAUTION!
-	 * - This app utilize laravel's encryption key configuration (APP_KEY), secure and random encryption key is required.
+	 * - This app utilize laravel's encryption key configuration (APP_KEY), secure randomized encryption key is required.
 	 * 
 	 */
 ];
