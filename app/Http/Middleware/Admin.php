@@ -15,7 +15,7 @@ class Admin {
 	 * @return mixed
 	 */
 	public function handle($request, Closure $next, $guard = NULL) {
-		if (in_array($request->user()->id, config('tusso.admin'))) {
+		if (in_array($request->user()->username, config('tusso.admin'))) {
 			return $next($request);
 		} else {
 			return response('Unauthorized.', 401);

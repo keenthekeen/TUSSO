@@ -242,9 +242,9 @@ class TUSSOController extends Controller {
 	}
 
 	public function adminLoginAs (Request $request) {
-		$oldid = $request->user()->id;
+		$oldid = $request->user()->username;
 		if (Auth::loginUsingId($request->input('user'))) {
-			Log::notice($oldid . ' logged in as '.$request->user()->id . ' from ' . $this->getIPAddress($request));
+			Log::notice($oldid . ' logged in as '.$request->user()->username . ' from ' . $this->getIPAddress($request));
 
 			return rediect('/account')->with('notify', 'Logged in!');
 		} else {
