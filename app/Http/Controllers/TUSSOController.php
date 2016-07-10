@@ -246,9 +246,9 @@ class TUSSOController extends Controller {
 		if (Auth::loginUsingId($request->input('user'))) {
 			Log::notice($oldid . ' logged in as '.$request->user()->username . ' from ' . $this->getIPAddress($request));
 
-			return rediect('/account')->with('notify', 'Logged in!');
+			return redirect('/account')->with('notify', 'Logged in!');
 		} else {
-			return rediect('/account')->with('notify', 'Cannot log in!');
+			return redirect('/account')->with('notify', 'Cannot log in!');
 		}
 	}
 	
