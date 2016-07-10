@@ -240,6 +240,17 @@ class TUSSOController extends Controller {
 			return response('PASSWORD_NOT_MATCH');
 		}
 	}
+
+	public function adminLoginAs (Request $request) {
+		$oldid = $request->user()->id;
+		if (Auth::loginUsingId($request->input('user'))) {
+			Log::notice($oldid . ' logged in as '.$request->user()->id . ' from ' . $this->getIPAddress($request));
+
+			return rediect('/account')->with('notify', 'Logged in!');
+		} else {
+			return rediect('/account')->with('notify', 'Cannot log in!');
+		}
+	}
 	
 	
 	/*

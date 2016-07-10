@@ -42,6 +42,18 @@ return [
 	 */
 	'allow_password_change' => env('TUSSO_ALLOW_PASSWORD_CHANGE', false),
 
+	/* --------------------------------------------------------------------------
+	 * TURS URL
+	 * --------------------------------------------------------------------------
+	 */
+	'turs' => 'http://resource.local.triamudom.ac.th',
+
+	/* --------------------------------------------------------------------------
+	 * Administrators
+	 * --------------------------------------------------------------------------
+	 */
+	'admin' => array('tuadmin'),
+
 	/* CAUTION!
 	 * - This app utilize laravel's encryption key configuration (APP_KEY), secure randomized encryption key is required.
 	 * 

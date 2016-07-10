@@ -65,6 +65,13 @@ if (config('tusso.shutdown')) {
 		}
 	});
 
+	Route::group(['middleware' => ['web', 'auth', 'admin']], function () {
+		Route::get('admin', function () {
+			return view('admin');
+		});
+		Route::post('admin/loginas', 'TUSSOController@adminLoginAs');
+	});
+
 	Route::group(['middleware' => ['session']], function () {
 		Route::any('state_validate', 'TUSSOController@validateSessionState');
 

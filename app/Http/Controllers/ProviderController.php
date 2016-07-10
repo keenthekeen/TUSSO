@@ -300,7 +300,7 @@ class ProviderController extends Controller {
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ', User:' . $user->username . ')');
 		
 		return response()->json([
-			'access_token' => $this->issueAccessToken($client->name, $token->getClaim('scope'), $user->username),
+			'access_token' => self::issueAccessToken($client->name, $token->getClaim('scope'), $user->username),
 			'token_type' => 'Bearer',
 			'expires_in' => 3600,
 			'id_token' => $this->createIDToken($user, $client)
@@ -387,7 +387,7 @@ class ProviderController extends Controller {
 		}
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ')');
 		
-		return $this->issueAccessToken($client->name, explode(',', $client->scope), '*');
+		return self::issueAccessToken($client->name, explode(',', $client->scope), '*');
 	}
 	
 	/* validateSessionState()
@@ -484,7 +484,7 @@ class ProviderController extends Controller {
 	 * @param String $appname
 	 * @param Array $appscope
 	 */
-	private function issueAccessToken($appname, $appscope, $foruser) {
+	public static function issueAccessToken($appname, $appscope, $foruser) {
 		//Create JWT access token, grant access to all user.
 		$signer = new \Lcobucci\JWT\Signer\Rsa\Sha256();
 		$privateKey = new Key(Storage::get('private.key'));
