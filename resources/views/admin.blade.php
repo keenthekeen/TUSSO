@@ -28,14 +28,13 @@
             <div class="row margin">
                 <div class="input-field col s12 m4">
                     <select name="type">
-                        <option value="" disabled selected>Choose your option</option>
                         <option value="id">ID</option>
                         <option value="lastname">Last name</option>
                     </select>
                     <label>Search type</label>
                 </div>
                 <div class="input-field col s12 m8">
-                    <input id="search" type="text" name="search" class="validate"/>
+                    <input id="search" type="text" name="search" class="validate" autofocus />
                     <label for="search">Keyword</label>
                 </div>
             </div>
