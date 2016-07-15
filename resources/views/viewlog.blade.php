@@ -16,6 +16,8 @@
             echo nl2br(str_replace('local.', '', file_get_contents(storage_path('logs/' . date('o-m-d') . '.log'))));
         } elseif (config('app.log') === 'single') {
             echo nl2br(str_replace('local.', '', file_get_contents(storage_path('logs/laravel.log'))));
+        } elseif (\App\Http\Controllers\UIController::isGraylog()) {
+            echo 'Using Graylog server, cannot view logs here!';
         } else {
             echo 'Not Available, please contact administrator';
         }

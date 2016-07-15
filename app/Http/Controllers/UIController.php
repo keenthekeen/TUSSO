@@ -79,4 +79,8 @@ class UIController extends Controller {
 		return response()->json($request->all());
 	}
 
+	public static function isGraylog () {
+		return (boolean) env('GRAYLOG2_ENABLE', false);
+	}
+
 }
