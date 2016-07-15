@@ -67,6 +67,10 @@
                 </div>
             </div>
         </form>
+        <br />
+        @if (!\App\Http\Controllers\UIController::isGraylog())
+            <a class="btn waves-effect waves-light cyan" href="/log">View logs</a>
+            @endif
     </div>
 
 @endsection

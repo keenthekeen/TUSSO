@@ -70,6 +70,9 @@ if (config('tusso.shutdown')) {
 			return view('admin');
 		});
 		Route::post('admin/loginas', 'TUSSOController@adminLoginAs');
+		Route::get('log', function () {
+			return view('viewlog');
+		});
 	});
 
 	Route::group(['middleware' => ['session']], function () {
@@ -87,9 +90,6 @@ if (config('tusso.shutdown')) {
 				}
 			});
 			Route::get('session', 'UIController@debugSession');
-			Route::get('log', function () {
-				return view('viewlog');
-			});
 			Route::any('request', 'UIController@debugRequest');
 		}
 	});
