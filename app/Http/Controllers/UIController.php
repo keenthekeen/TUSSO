@@ -80,7 +80,7 @@ class UIController extends Controller {
 	}
 
 	public static function isGraylog () {
-		return (boolean) env('GRAYLOG2_ENABLE', false);
+		return env('GRAYLOG2_ENABLE', 'false') == true;
 	}
 
 }
