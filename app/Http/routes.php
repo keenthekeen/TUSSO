@@ -35,6 +35,7 @@ if (config('tusso.shutdown')) {
 
 		Route::get('service/auth/status', 'TUSSOController@proxyAuth');
 		Route::get('service/auth/login', 'TUSSOController@proxyGoLogin');
+		Route::post('service/auth/login', 'TUSSOController@proxyLogMeIn');
 		
 		Route::get('openid/logout', 'ProviderController@remoteLogout');
 
