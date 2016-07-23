@@ -147,8 +147,7 @@ return [
     | the cookie from being sent to you if it can not be done securely.
     |
     */
-
-	// @todo Change this in production environment
-    'secure' => false,
+	
+    'secure' => true,
 
 ];

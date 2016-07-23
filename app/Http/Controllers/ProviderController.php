@@ -215,9 +215,13 @@ class ProviderController extends Controller {
 			$data['state'] = $request->input('state', '');
 		}
 		if (in_array('id_token', $respType)) {
-			
-			//Create JWT ID token, containing user's basic info, signed with app secret.
-			$token = $this->createIDToken($user, $app, $request->input('nonce', ''), $request->session()->get('session_state', ''));
+			if ($request->input('client_id') == 'nginx') {
+				// Create JWT Pass token
+				$token = $this->issuePassToken($user, $app, $request->input('nonce', ''), $request->session()->get('session_state', ''), $request);
+			} else {
+				//Create JWT ID token, containing user's basic info, signed with app secret.
+				$token = $this->createIDToken($user, $app, $request->input('nonce', ''), $request->session()->get('session_state', ''));
+			}
 			
 			// We send user's info to client in JWT, which is not encrypted, so using of TLS is highly recommended and avoid sensitive data being sent.
 			$data['id_token'] = $token;
@@ -227,12 +231,13 @@ class ProviderController extends Controller {
 			return view('auth-error', ['error' => 'NOT_IMPLEMENTED_RESPONSE_TYPE']);
 		}
 		Log::debug($user->username . ' logging into ' . $request->input('client_id'));
-
+		
 		if ($request->has('kiosk')) {
 			// Kiosk mode: Don't remember user in session, just authenticate user to an app.
 			Auth::logout();
 			$request->session()->flush();
 		}
+		
 		return view('auth-forward', ['goto' => $request->input('redirect_uri'), 'data' => $data]);
 	}
 	
@@ -459,6 +464,23 @@ class ProviderController extends Controller {
 		->set('id', $user->username)// Configures a new claim
 		->set('name', $user->name)->set('type', $user->type)->set('group', $user->group)->set('nonce', $nonce)->set('session_state', $session_state)->sign($signer,
 			$app->secret)->getToken(); // Retrieves the generated token
+		return (String)$token;
+	}
+	
+	private function issuePassToken($user, $app, $nonce = '', $session_state = '', Request $request) {
+		// A token that replace usual ID Token, designated for Nginx's auth_request authentication.
+		// Create JWT, containing user's browser info, signed with service's private key.
+		$signer = new \Lcobucci\JWT\Signer\Rsa\Sha256();
+		$privateKey = new Key(Storage::get('private.key'));
+		$token = (new Builder())->setIssuer(config('tusso.url'))// Configures the issuer (iss claim)
+		->setAudience('https://' . $app->name)// Configures the audience (aud claim)
+		->setId('TUSSO-PS-' . $user->username . '-' . microtime(true) . rand(10, 99), true)// Configures the id (jti claim), replicating as a header item
+		->setIssuedAt(time())// Configures the time that the token was issue (iat claim)
+		->setNotBefore(time() - 60)// Configures the time that the token can be used (nbf claim) -- set to minus to help server with inaccurate time
+		->setExpiration(time() + 3600)// Configures the expiration time of the token (exp claim) -- Client should set their session expiration time to this
+		->set('id', $user->username)// Configures a new claim
+		->set('type', $user->type)->set('locale', $request->getLocale())->set('nonce', $nonce)->set('session_state', $session_state)->sign($signer,
+			$privateKey)->getToken(); // Retrieves the generated token
 		return (String)$token;
 	}
 	

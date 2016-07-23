@@ -33,7 +33,9 @@ if (config('tusso.shutdown')) {
 		});
 		Route::get('logout', 'UIController@logout');
 
-		Route::get('api/status', 'TUSSOController@proxyAuth');
+		Route::get('service/auth/status', 'TUSSOController@proxyAuth');
+		Route::get('service/auth/login', 'TUSSOController@proxyGoLogin');
+		
 		Route::get('openid/logout', 'ProviderController@remoteLogout');
 
 		if (config('tusso.use_tuent')) {

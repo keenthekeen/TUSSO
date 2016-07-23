@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Adldap\Laravel\AdldapAuthUserProvider;
 use App\User;
 use DB;
-use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Http\Request;
 use Hash;
+use Lcobucci\JWT\Parser;
+use Lcobucci\JWT\Signer\Key;
+use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Lcobucci\JWT\ValidationData;
 use Log;
 use Auth;
 use Validator;
@@ -32,7 +34,7 @@ class TUSSOController extends Controller {
 	*/
 	public function TryLogIn(Request $request) {
 		$this->validate($request, ['username' => 'required', 'password' => 'required']);
-
+		
 		if (config('tusso.use_ldap') && !(config('tusso.use_tuent') && strlen($request->input('username')) == 14 && (substr($request->input('username'), 0,
 						1) == 'n' || substr($request->input('username'), 0, 1) == 'N') && is_numeric(substr($request->input('username'), 1, 13)))
 		) {
@@ -49,7 +51,7 @@ class TUSSOController extends Controller {
 						// User has problem with his data, deny access and tell him to contact administrator
 						Log::warning(Auth::user()->username . ' tried to log in from ' . $this->getIPAddress($request) . ' but has some problem, denied access.');
 						Auth::logout();
-
+						
 						if ($request->ajax()) {
 							return response()->json(['error' => trans('messages.userdenied')]);
 						} else {
@@ -62,7 +64,7 @@ class TUSSOController extends Controller {
 			} catch (\Exception $e) {
 				if (!$this->manualLogin($request->username, $request->password, $request)) {
 					Log::error('Authentication failed (probably caused by unreachable directory server)');
-
+					
 					return $this->returnLoginError($request, trans('messages.ldapfail'));
 				}
 			}
@@ -71,11 +73,11 @@ class TUSSOController extends Controller {
 				return $this->returnLoginError($request, trans('messages.ldapofffail'));
 			}
 		}
-
+		
 		return $this->finishedLogin($request);
-
+		
 	}
-
+	
 	private function finishedLogin(Request $request) {
 		$request->session()->put('session_state', sha1('TUSSOSessionState:' . $request->user()->username . '-' . microtime()));
 		$request->session()->put('login_time', time());
@@ -84,27 +86,27 @@ class TUSSOController extends Controller {
 		} elseif ($request->session()->has('redirect_queue')) {
 			$redirect = $request->session()->get('redirect_queue');
 			$request->session()->forget('redirect_queue');
-
+			
 			return $this->returnLoginSuccess($request, $redirect);
 		} else {
 			return $this->returnLoginSuccess($request, '/account');
 		}
 	}
-
+	
 	private function manualLogin($username, $password, Request $request) {
 		if ($user = User::find($username)) {
 			if (Hash::check($password, $user->password)) {
 				if (Auth::loginUsingId($user->username)) {
 					Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . $this->getIPAddress($request));
-
+					
 					return true;
 				}
 			}
 		}
-
+		
 		return false;
 	}
-
+	
 	private function returnLoginError(Request $request, $error) {
 		if ($request->ajax()) {
 			return response()->json(['error' => $error]);
@@ -112,7 +114,7 @@ class TUSSOController extends Controller {
 			return redirect('/login')->with('error_message', $error)->with('redirect_queue', $request->input('redirect_queue', ''));
 		}
 	}
-
+	
 	private function returnLoginSuccess(Request $request, $redirect) {
 		if ($request->ajax()) {
 			return response()->json(['redirect' => $redirect]);
@@ -120,7 +122,7 @@ class TUSSOController extends Controller {
 			return redirect($redirect)->with('notify', trans('messages.loginsuccess'));
 		}
 	}
-
+	
 	/*
 	 * cleanUserInfo()
 	 *
@@ -128,11 +130,11 @@ class TUSSOController extends Controller {
 	 */
 	private function cleanUserInfo() {
 		$user = Auth::user();
-
+		
 		// Group
 		$grn = explode(',', $user->group, 2);
 		$user->group = str_replace('CN=', '', $grn[0]);
-
+		
 		// User type
 		if (str_contains($user->group, 'Staffs') || $user->group == 'Domain Admins') {
 			$user->type = 'staff';
@@ -154,7 +156,7 @@ class TUSSOController extends Controller {
 		
 		return true;
 	}
-
+	
 	/*
 	 * newStudentLogin()
 	 *
@@ -173,11 +175,11 @@ class TUSSOController extends Controller {
 			'room' => 'required'
 			//'password' => 'confirmed'
 		]);
-
+		
 		if ($validator->fails()) {
 			return response()->json(['status' => 'MALFORMED_REQUEST']);
 		}
-
+		
 		if ($applicant = DB::table('newstudent')->where('nationalid', $request->input('citizenid'))->first()) {
 			if ($user = User::find('n' . $applicant->nationalid)) {
 				return response()->json(['status' => 'USER_EXISTS']);
@@ -187,12 +189,12 @@ class TUSSOController extends Controller {
 		} else {
 			return response()->json(['status' => 'USER_NOT_EXIST']);
 		}
-
+		
 		if ($request->has('password')) {
 			$validator = Validator::make($request->all(), [
 				'password' => 'confirmed'
 			]);
-
+			
 			if ($validator->fails()) {
 				return response()->json(['status' => 'MALFORMED_REQUEST']);
 			}
@@ -215,7 +217,7 @@ class TUSSOController extends Controller {
 		
 	}
 	
-	public function changePassword (Request $request) {
+	public function changePassword(Request $request) {
 		$validator = Validator::make($request->all(), [
 			'oldpassword' => 'required',
 			'password' => 'required|confirmed'
@@ -223,29 +225,29 @@ class TUSSOController extends Controller {
 		if ($validator->fails()) {
 			return response('MALFORMED_REQUEST');
 		}
-
+		
 		$user = $request->user();
 		if (Hash::check($request->oldpassword, $user->password)) {
 			// Old password match...
-
+			
 			/*$user->fill([
 				'password' => Hash::make($request->password)
 			])->save();*/
-
+			
 			/*$aduser = (new AdldapAuthUserProvider(new BcryptHasher(), $user))->retrieveById($user->username);
 			$aduser->setPassword('abc123')->save();*/
-
+			
 			return 'WORK_IN_PROGRESS_503';
 		} else {
 			return response('PASSWORD_NOT_MATCH');
 		}
 	}
-
-	public function adminLoginAs (Request $request) {
+	
+	public function adminLoginAs(Request $request) {
 		$oldid = $request->user()->username;
 		if (Auth::loginUsingId($request->input('user'))) {
-			Log::notice($oldid . ' logged in as '.$request->user()->username . ' from ' . $this->getIPAddress($request));
-
+			Log::notice($oldid . ' logged in as ' . $request->user()->username . ' from ' . $this->getIPAddress($request));
+			
 			return redirect('/account')->with('notify', 'Logged in!');
 		} else {
 			return redirect('/account')->with('notify', 'Cannot log in!');
@@ -258,7 +260,7 @@ class TUSSOController extends Controller {
 	 *
 	 * a method called from reverse proxy server to check whether user is authenticated
 	 *
-	 * @return HTTP Status 200 with X-Username header or 403
+	 * @return HTTP Status 200 or 403
 	 */
 	public function proxyAuth() {
 		if (Auth::check()) {
@@ -267,7 +269,45 @@ class TUSSOController extends Controller {
 			return response('UNAUTHORIZED', 403)->header('X-AccessRight', '')->header('Access-Control-Allow-Origin', '*');
 		}
 	}
-
+	
+	public function proxyGoLogin(Request $request) {
+		$state = substr(sha1(microtime() . rand()), 0, 10);
+		$nonce = substr(sha1(microtime() . rand()), 0, 10);
+		$request->session()->put('openid_state', $state);
+		$request->session()->put('openid_nonce', $nonce);
+		
+		return redirect(config('core.authorization_endpoint') . '/?scope=openid&response_type=code id_token&client_id=nginx&redirect_uri=' . urlencode($request->fullUrl()) . '&nonce=' . $nonce . '&state=' . $state);
+	}
+	
+	public function proxyLogMeIn(Request $request) {
+		if (!$request->session()->has('openid_nonce')) {
+			return response('ผู้ใช้ใช้เวลาในการยืนยันตัวตนมากเกินไป หรือทำการยืนยันตัวตนไม่ถูกต้อง กรุณาลองใหม่ (Expired State)', 400);
+		} elseif ($request->session()->get('openid_state') != $request->input('state')) {
+			return response('ผู้ใช้ทำการยืนยันตัวตนไม่ถูกต้อง กรุณาลองใหม่ (Invalid State)', 400);
+		}
+		
+		$token = (new Parser())->parse((string)$request->input('id_token'));
+		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
+		$vdata->setIssuer(config('tusso.url'));
+		$signer = new Sha256();
+		$publicKey = new Key(file_get_contents(storage_path('app/public.key')));
+		if (!$token->validate($vdata)) {
+			return response('ตัวตนผู้ใช้ไม่ถูกต้อง (Expired identity token)', 400);
+		} elseif (!$token->verify($signer, $publicKey)) {
+			return response('ตัวตนผู้ใช้ไม่ถูกต้อง (Invalid identity token)', 400);
+		} elseif ($token->getClaim('nonce') != $request->session()->get('openid_nonce')) {
+			return response('ตัวตนผู้ใช้ไม่ถูกต้อง (Invalid nonce)', 400);
+		}
+		
+		/* We use session to manually temporary store user data, not Laravel's built-in auth,
+		 because we don't need to store user's data permanently in database.*/
+		$request->session()->put('userid', $token->getClaim('id'));
+		$request->session()->put('usertype', $token->getClaim('type'));
+		$request->session()->put('login_time', time());
+		
+		return redirect('/');
+	}
+	
 	public function apiSearch(Request $request) {
 		if ($request->has('keyword')) {
 			if ($quser = User::where('name', 'LIKE', '%' . $request->keyword . '%')->orWhere('username', 'LIKE', '%' . $request->keyword . '%')->first()) {
@@ -291,7 +331,7 @@ class TUSSOController extends Controller {
 			return response()->json(['error' => 'EMPTY_REQUEST'])->header('Access-Control-Allow-Origin', '*');
 		}
 	}
-
+	
 	public function getIPAddress(Request $request) {
 		if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
 			// Cloudflare
@@ -302,7 +342,7 @@ class TUSSOController extends Controller {
 		} else {
 			$ip = $request->ip();
 		}
-
+		
 		return $ip;
 	}
 	
