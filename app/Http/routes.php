@@ -32,10 +32,6 @@ if (config('tusso.shutdown')) {
 			return view('login');
 		});
 		Route::get('logout', 'UIController@logout');
-
-		Route::get('service/auth/status', 'TUSSOController@proxyAuth');
-		Route::get('service/auth/login', 'TUSSOController@proxyGoLogin');
-		Route::post('service/auth/login', 'TUSSOController@proxyLogMeIn');
 		
 		Route::get('openid/logout', 'ProviderController@remoteLogout');
 
@@ -80,6 +76,10 @@ if (config('tusso.shutdown')) {
 
 	Route::group(['middleware' => ['session']], function () {
 		Route::any('state_validate', 'TUSSOController@validateSessionState');
+		
+		Route::get('service/auth/status', 'TUSSOController@proxyAuth');
+		Route::get('service/auth/login', 'TUSSOController@proxyGoLogin');
+		Route::post('service/auth/login', 'TUSSOController@proxyLogMeIn');
 
 		//DEBUGGING PURPOSE
 		if (config('app.debug')) {
