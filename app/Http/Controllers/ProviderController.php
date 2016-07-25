@@ -319,7 +319,7 @@ class ProviderController extends Controller {
 	public function publishConfig() {
 		return response()->json(array(
 			'issuer' => config('tusso.url'),
-			-'authorization_endpoint' => config('tusso.url') . '/openid/authorize',
+			'authorization_endpoint' => config('tusso.url') . '/openid/authorize',
 			'token_endpoint' => config('tusso.url') . '/openid/token',
 			'response_types_supported' => ['code', 'id_token'],
 			'grant_types_supported' => ["authorization_code", "implicit"],

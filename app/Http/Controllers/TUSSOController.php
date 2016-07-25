@@ -276,7 +276,7 @@ class TUSSOController extends Controller {
 		$request->session()->put('openid_state', $state);
 		$request->session()->put('openid_nonce', $nonce);
 		
-		return redirect(config('core.authorization_endpoint') . '/?scope=openid&response_type=code id_token&client_id=nginx&redirect_uri=' . urlencode($request->fullUrl()) . '&nonce=' . $nonce . '&state=' . $state);
+		return redirect(config('tusso.url') . '/openid/authorize?scope=openid&response_type=code id_token&client_id=nginx&redirect_uri=' . urlencode($request->fullUrl()) . '&nonce=' . $nonce . '&state=' . $state);
 	}
 	
 	public function proxyLogMeIn(Request $request) {
