@@ -392,7 +392,7 @@ class ProviderController extends Controller {
 		}
 		Log::info('Access token has been issued for ' . $client->name . ' (' . $request->ip() . ')');
 		
-		return self::issueAccessToken($client->name, explode(',', $client->scope), '*');
+		return response(self::issueAccessToken($client->name, explode(',', $client->scope), '*'));
 	}
 	
 	/* validateSessionState()

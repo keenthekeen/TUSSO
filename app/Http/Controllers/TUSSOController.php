@@ -280,11 +280,11 @@ class TUSSOController extends Controller {
 	}
 	
 	public function proxyLogMeIn(Request $request) {
-		if (!$request->session()->has('openid_nonce')) {
+		/*if (!$request->session()->has('openid_nonce')) {
 			return response('ผู้ใช้ใช้เวลาในการยืนยันตัวตนมากเกินไป หรือทำการยืนยันตัวตนไม่ถูกต้อง กรุณาลองใหม่ (Expired State)', 400);
 		} elseif ($request->session()->get('openid_state') != $request->input('state')) {
 			return response('ผู้ใช้ทำการยืนยันตัวตนไม่ถูกต้อง กรุณาลองใหม่ (Invalid State)', 400);
-		}
+		}*/
 		
 		$token = (new Parser())->parse((string)$request->input('id_token'));
 		$vdata = new ValidationData(); // It will use the current time to validate (iat, nbf and exp)
@@ -295,9 +295,9 @@ class TUSSOController extends Controller {
 			return response('ตัวตนผู้ใช้ไม่ถูกต้อง (Expired identity token)', 400);
 		} elseif (!$token->verify($signer, $publicKey)) {
 			return response('ตัวตนผู้ใช้ไม่ถูกต้อง (Invalid identity token)', 400);
-		} elseif ($token->getClaim('nonce') != $request->session()->get('openid_nonce')) {
+		} /*elseif ($token->getClaim('nonce') != $request->session()->get('openid_nonce')) {
 			return response('ตัวตนผู้ใช้ไม่ถูกต้อง (Invalid nonce)', 400);
-		}
+		}*/
 		
 		/* We use session to manually temporary store user data, not Laravel's built-in auth,
 		 because we don't need to store user's data permanently in database.*/
