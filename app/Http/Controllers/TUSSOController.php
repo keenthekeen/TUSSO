@@ -46,10 +46,10 @@ class TUSSOController extends Controller {
 				], $request->has('remember'))
 				) {
 					if ($this->cleanUserInfo()) {
-						Log::info(Auth::user()->username . ' logged in from ' . $this->getIPAddress($request));
+						Log::info(Auth::user()->username . ' logged in from ' . self::getIPAddress($request));
 					} else {
 						// User has problem with his data, deny access and tell him to contact administrator
-						Log::warning(Auth::user()->username . ' tried to log in from ' . $this->getIPAddress($request) . ' but has some problem, denied access.');
+						Log::warning(Auth::user()->username . ' tried to log in from ' . self::getIPAddress($request) . ' but has some problem, denied access.');
 						Auth::logout();
 						
 						if ($request->ajax()) {
@@ -97,7 +97,7 @@ class TUSSOController extends Controller {
 		if ($user = User::find($username)) {
 			if (Hash::check($password, $user->password)) {
 				if (Auth::loginUsingId($user->username)) {
-					Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . $this->getIPAddress($request));
+					Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . self::getIPAddress($request));
 					
 					return true;
 				}
@@ -246,7 +246,7 @@ class TUSSOController extends Controller {
 	public function adminLoginAs(Request $request) {
 		$oldid = $request->user()->username;
 		if (Auth::loginUsingId($request->input('user'))) {
-			Log::notice($oldid . ' logged in as ' . $request->user()->username . ' from ' . $this->getIPAddress($request));
+			Log::notice($oldid . ' logged in as ' . $request->user()->username . ' from ' . self::getIPAddress($request));
 			
 			return redirect('/account')->with('notify', 'Logged in!');
 		} else {
@@ -332,12 +332,13 @@ class TUSSOController extends Controller {
 		}
 	}
 	
-	public function getIPAddress(Request $request) {
+	public static function getIPAddress(Request $request) {
 		if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
 			// Cloudflare
 			$ip = $_SERVER["HTTP_CF_CONNECTING_IP"];
+		} elseif (isset($_SERVER['HTTP_X_REAL_IP'])) {
+			$ip = $_SERVER['HTTP_X_REAL_IP'];
 		} elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-			// Proxy server, including Nginx.
 			$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
 		} else {
 			$ip = $request->ip();
