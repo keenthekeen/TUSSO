@@ -77,7 +77,7 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
     <div id="modal-forget" class="modal">
         <div class="modal-content">
             <h4>{{ trans('messages.forget_pwd') }}</h4>
-            <p>{{ trans('messages.forget_instruction') }}</p>
+            <p>{!! trans('messages.forget_instruction') !!}</p>
         </div>
         <div class="modal-footer">
             <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Acknowledged</a>
