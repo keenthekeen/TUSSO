@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Adldap\Adldap;
+use Adldap\Exceptions\PasswordPolicyException;
+use Adldap\Exceptions\WrongPasswordException;
 use App\User;
 use DB;
 use Illuminate\Http\Request;
@@ -224,6 +227,8 @@ class TUSSOController extends Controller {
 		]);
 		if ($validator->fails()) {
 			return response('MALFORMED_REQUEST');
+		} elseif (!config('tusso.allow_password_change')) {
+			return response('DISABLED');
 		}
 		
 		$user = $request->user();
@@ -234,10 +239,28 @@ class TUSSOController extends Controller {
 				'password' => Hash::make($request->password)
 			])->save();*/
 			
-			/*$aduser = (new AdldapAuthUserProvider(new BcryptHasher(), $user))->retrieveById($user->username);
-			$aduser->setPassword('abc123')->save();*/
+			$ad = new \Adldap\Adldap();
+			$provider = new \Adldap\Connections\Provider(config('adldap.connections.default.connection_settings'));
+			$ad->addProvider('default', $provider);
+			try {
+				$ad->connect('default');
+			} catch (\Adldap\Exceptions\Auth\BindException $e) {
+				return response('LDAP_CONNECTION_FAILURE');
+			}
 			
-			return 'WORK_IN_PROGRESS_503';
+			try {
+				$aduser = $provider->search()->whereEquals('sAMAccountName', $request->user()->username)->firstOrFail();
+				if ($aduser->changePassword($request->input('oldpassword'), $request->input('password'))) {
+					return response('SUCCEED');
+				}
+			} catch (WrongPasswordException $e) {
+				return response("Uh oh, you've entered the wrong old password!");
+			} catch (PasswordPolicyException $e) {
+				return response("Looks like your new password doesn't meet our requirements. Try again.");
+			}
+			
+			
+			return response('UNKNOWN_ERROR');
 		} else {
 			return response('PASSWORD_NOT_MATCH');
 		}

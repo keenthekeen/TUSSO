@@ -53,8 +53,6 @@ if (config('tusso.shutdown')) {
 		if (config('tusso.allow_password_change')) {
 			// Password change through LDAP requires SSL or TLS, which is not implemented in dc.triamudom.ac.th
 			Route::get('password/change', function () {
-				abort(501);
-				
 				return view('changepassword');
 			});
 			Route::post('password/change', 'TUSSOController@changePassword');
