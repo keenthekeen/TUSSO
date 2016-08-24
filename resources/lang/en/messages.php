@@ -37,4 +37,5 @@ return [
 	'old_pwd' => 'Old password',
 	'new_pwd' => 'New password',
 	'confirm' => 'Confirm ',
+	'usewifiaccount' => 'Please login using Triamudom Wifi account'
 ];

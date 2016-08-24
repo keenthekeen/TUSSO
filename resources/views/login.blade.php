@@ -26,6 +26,9 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
                     <h4 class="center login-form-text">{{ trans('messages.pleaselogin') }}</h4>
                 </div>
             </div>
+            <ul class="collection">
+                <li class="collection-item amber lighten-3">{{ trans('messages.usewifiaccount') }}</li>
+            </ul>
             @if (count($errors) > 0)
                 <ul class="collection white-text">
                     <li class="collection-item red darken-1">เกิดข้อผิดพลาดในข้อมูล
