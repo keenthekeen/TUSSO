@@ -52,7 +52,7 @@ return [
 	 * Administrators
 	 * --------------------------------------------------------------------------
 	 */
-	'admin' => array('tuadmin'),
+	'admin' => array('tuadmin', 's53783'),
 
 	/* CAUTION!
 	 * - This app utilize laravel's encryption key configuration (APP_KEY), secure randomized encryption key is required.
