@@ -116,7 +116,7 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
                             if (credential.type == "password") {
                                 // It's not possible for JavaScript on the website to retrieve a raw password
                                 var myHeaders = new Headers({
-                                    "X-CSRF-TOKEN": $('#csrftoken').val(),
+                                    "X-CSRF-TOKEN": $('input[name=_token]').val(),
                                     "X-Requested-With": 'XMLHttpRequest'
                                 });
                                 fetch("/login?redirect_queue=" + encodeURIComponent($("#iRedir").val()) + "&mac=" + encodeURIComponent($("#iMac").val()), {

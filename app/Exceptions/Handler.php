@@ -44,8 +44,7 @@ class Handler extends ExceptionHandler {
 	 */
 	public function render($request, Exception $e) {
 		if ($e instanceof TokenMismatchException) {
-			//redirect to a form. Here is an example of how I handle mine
-			return view('errors.custom', ['title' => 'Form token mismatch', 'description' => 'ดูเหมือนว่าคุณไม่ได้กดส่งฟอร์มเป็นเวลานานเกินไป กรุณาลองใหม่', 'button' => '<a href="/" class="waves-effect waves-light btn indigo darken-3 tooltipped center-align"
+			return response()->view('errors.custom', ['title' => 'Form token mismatch', 'description' => 'ดูเหมือนว่าคุณไม่ได้กดส่งฟอร์มเป็นเวลานานเกินไป กรุณาลองใหม่', 'button' => '<a href="/" class="waves-effect waves-light btn indigo darken-3 tooltipped center-align"
        style="width:80%;max-width:350px;margin-top:20px">ไปยังหน้าหลัก</a>']);
 		}
 		

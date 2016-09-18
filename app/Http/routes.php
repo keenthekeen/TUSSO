@@ -24,7 +24,7 @@ if (config('tusso.shutdown')) {
 		Route::get('switch_lang', 'UIController@switchLanguage');
 		
 		Route::group(['middleware' => 'throttle:15,5'], function () {
-			//Prevents brute-force attack
+			// Prevents brute-force attack
 			Route::post('login', 'TUSSOController@TryLogIn');
 		});
 		
