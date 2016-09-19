@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>{{ trans('messages.name') }}</title>
+    <!-- Created by Siwat Techavoranant in 2016 -->
+    <!-- Triamudom Computer Club is recruiting PHP developers, please visit tucc.triamudom.ac.th -->
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="google" content="notranslate"/>
