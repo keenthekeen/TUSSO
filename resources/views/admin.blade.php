@@ -49,7 +49,7 @@
         </form>
         @if(Request::has('type') && Request::has('search'))
             <br />
-            <?php dump(json_decode(file_get_contents(config('tusso.turs').'/student/'. ((Request::input('type') == 'id') ? 'id/'.Request::input('search').'?' : 'search/'.Request::input('type').'?value='.Request::input('search').'&').'access_token='.\App\Http\Controllers\ProviderController::issueAccessToken('sso.local.triamudom.ac.th', ['openid', 'student', 'citizenid', 'searchstudent'], '*')))); ?><br />
+            <?php dump(json_decode(file_get_contents(config('tusso.turs').'/student/'. ((Request::input('type') == 'id') ? 'id/'.Request::input('search').'?' : 'search/'.Request::input('type').'?value='.Request::input('search').'&').'access_token='.\App\Http\Controllers\ProviderController::issueAccessToken('sso.local.triamudom.ac.th', ['openid', 'student', 'citizenid', 'searchstudent', 'studentdetail'], '*')))); ?><br />
             @endif
         <br />
         <form method="POST" action="/admin/loginas">
