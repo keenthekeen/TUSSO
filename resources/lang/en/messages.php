@@ -30,12 +30,13 @@ return [
 	'go' => 'Go',
 	'simple_auth_input' => 'The application has sent incorrect parameters',
 	'forget_pwd' => 'Change/Forget password?',
-	'forget_instruction' => 'Please contact Computer teacher\'s room, 1st Floor, Building 9.',
+	'forget_instruction' => 'Please contact Computer teacher\'s room, 2nd Floor, Building 9.',
 	'tuent_register' => 'Register for temporary account (New students; Thai)',
 	'proceed' => 'Proceed',
 	'change_pwd' => 'Change password',
 	'old_pwd' => 'Old password',
 	'new_pwd' => 'New password',
 	'confirm' => 'Confirm ',
-	'usewifiaccount' => 'Please login using Triamudom Wifi account'
+	'usewifiaccount' => 'Please login using Triamudom Wifi account',
+    'back' => 'Back',
 ];

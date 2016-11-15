@@ -186,6 +186,7 @@ class ProviderController extends Controller {
 			//$request->session()->put('redirect_queue', $request->fullUrl());
 			
 			$request->session()->set('redirect_queue', $request->fullUrl());
+            $request->session()->set('openid_queue', $request->input('redirect_uri'));
 			
 			return redirect('/login')->with('notify', trans('messages.pleaselogin'));
 		}

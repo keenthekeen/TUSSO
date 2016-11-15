@@ -17,6 +17,12 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
 
 @section('content')
     <div class="z-depth-1 card-panel" style="max-width:550px;margin:auto">
+        @if (!empty($redirect) && session()->has('openid_queue'))
+            <?php
+            $url = parse_url(session('openid_queue'));
+            ?>
+            <a href="<?=$url['scheme'] . '://' . $url['host']?>"><i class="small material-icons">arrow_back</i> Back</a>
+        @endif
         <form class="login-form" method="POST" action="/login">
             {{ csrf_field() }}
             <input type="hidden" name="redirect_queue" id="iRedir" value="{{ $redirect }}"/>
