@@ -93,6 +93,9 @@ if (config('tusso.shutdown')) {
 			});
 			Route::get('session', 'UIController@debugSession');
 			Route::any('request', 'UIController@debugRequest');
+            Route::get('phpinfo', function () {
+                phpinfo();
+            });
 			Route::get('sendlog', function () {
 				Log::debug('Test message from TUSSO');
 				echo 'Logged (' . \App\Http\Controllers\UIController::isGraylog() . ')';
