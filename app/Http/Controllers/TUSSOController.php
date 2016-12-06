@@ -62,6 +62,7 @@ class TUSSOController extends Controller {
                         }
                     }
                 } else {
+                    Log::debug('User has failed to log in. (' . $request->input('username') . ')', ['ip' => self::getIPAddress($request)]);
                     return $this->returnLoginError($request, trans('messages.loginfail'));
                 }
             } catch (\Exception $e) {
