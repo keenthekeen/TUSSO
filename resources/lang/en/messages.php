@@ -30,7 +30,7 @@ return [
 	'go' => 'Go',
 	'simple_auth_input' => 'The application has sent incorrect parameters',
 	'forget_pwd' => 'Change/Forget password?',
-	'forget_instruction' => 'Please contact Computer teacher\'s room, 2nd Floor, Building 9.',
+	'forget_instruction' => 'Please contact Computer teacher\'s office, 2nd Floor, Building 9.',
 	'tuent_register' => 'Register for temporary account (New students; Thai)',
 	'proceed' => 'Proceed',
 	'change_pwd' => 'Change password',

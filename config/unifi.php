@@ -3,7 +3,7 @@ return [
 	/*
 	 * UniFi Captive Portal config
 	 */
-	'switch' => true,
+	'switch' => false,
 
 	'controller_address' => 'unifi.triamudom.ac.th',
 	'controller_user' => 'admin',

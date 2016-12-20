@@ -1,11 +1,12 @@
 {
   "name": "laravel/laravel",
-  "description": "The Laravel Framework.",
+  "description": "Triamudom Central Authentication Service",
   "keywords": [
-    "framework",
-    "laravel"
+    "auth",
+    "sso",
+    "openid"
   ],
-  "license": "MIT",
+  "license": "proprietary",
   "type": "project",
   "require": {
     "php": ">=5.5.9",
