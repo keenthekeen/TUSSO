@@ -17,7 +17,7 @@ return [
 	'backhome' => 'Back to home',
 	'remember' => 'Remember',
 	'loginsuccess' => 'Login success!',
-	'loginfail' => 'Login fail!',
+	'loginfail' => 'Invalid username or password, note that password is case-sensitive.',
 	'ldapfail' => 'Directory unreachable, please notify administrator.',
 	'ldapofffail' => 'Cannot login using local DB',
 	'userdenied' => "Access denied due to your account info, please contact administrator.",
