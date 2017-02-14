@@ -8,6 +8,8 @@ use Carbon\Carbon;
 class FailedLogin extends Model {
     protected $table = 'failed_logins';
     
+    protected $fillable = ['username', 'ip'];
+    
     /**
      * Minutes to count failures
      *
@@ -18,14 +20,23 @@ class FailedLogin extends Model {
     /**
      * Count login failure
      */
-    public function countFailure() {
-        $count = self::whereBetween('updated_at', [Carbon::now()->subMinutes(self::$attemptCount),Carbon::now()])->count();
-        if ($count <= 0 AND rand(1,3) == 3) {
+    public static function countFailure() {
+        $count = self::whereBetween('updated_at', [Carbon::now()->subMinutes(self::$attemptCount), Carbon::now()])->count();
+        if ($count <= 0 AND rand(1, 3) == 3) {
             self::truncate();
-        } elseif (rand(0,9) >= 8) {
+        } elseif (rand(0, 9) >= 8) {
             // Randomly clean the table
-            self::whereBetween('updated_at', [Carbon::createFromTimestamp(0),Carbon::now()->subMinutes(self::$attemptCount)])->delete();
+            self::whereBetween('updated_at', [Carbon::createFromTimestamp(0), Carbon::now()->subMinutes(self::$attemptCount)])->delete();
         }
+        
         return $count;
+    }
+    
+    public static function isFailOver (int $threshold) {
+        return self::countFailure() > $threshold;
+    }
+    
+    public static function add(string $username, string $ip) {
+        return self::create(['username' => $username, 'ip' => $ip]);
     }
 }
