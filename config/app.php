@@ -164,6 +164,8 @@ return [
 
 		// IDE Helper, helps our code works with IDE nicely.
 		Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
+        
+        Sentry\SentryLaravel\SentryLaravelServiceProvider::class,
 
 	],
 
@@ -212,6 +214,7 @@ return [
 		'View' => Illuminate\Support\Facades\View::class,
 
 		'Adldap' => Adldap\Laravel\Facades\Adldap::class,
+        'Sentry' => Sentry\SentryLaravel\SentryFacade::class,
 
 	],
 
