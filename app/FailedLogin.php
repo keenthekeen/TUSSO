@@ -39,4 +39,8 @@ class FailedLogin extends Model {
     public static function add(string $username, string $ip) {
         return self::create(['username' => $username, 'ip' => $ip]);
     }
+    
+    public static function captchaNeeded() {
+        return self::isFailOver(15);
+    }
 }

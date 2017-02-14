@@ -38,6 +38,10 @@ class TUSSOController extends Controller {
     */
     public function TryLogIn(Request $request) {
         $this->validate($request, ['username' => 'required', 'password' => 'required']);
+        if ($request->session()->get('captcha_need') == true) {
+            $this->validate($request, ['g-recaptcha-response' => 'required|recaptcha']);
+        }
+        $request->session()->put('captcha_need', false);
         
         if (config('tusso.use_ldap') && !(config('tusso.use_tuent') && strlen($request->input('username')) == 14 && (substr($request->input('username'), 0,
                         1) == 'n' || substr($request->input('username'), 0, 1) == 'N') && is_numeric(substr($request->input('username'), 1, 13)))
@@ -114,6 +118,11 @@ class TUSSOController extends Controller {
     
     private function returnLoginError(Request $request, $error) {
         FailedLogin::add($request->input('username'),self::getIPAddress($request));
+    
+        if (FailedLogin::isFailOver(5) AND !FailedLogin::captchaNeeded()) {
+            // If the system is suspected brute-force attack but captcha is not deployed, slow login attempt down.
+            sleep(2);
+        }
         
         if ($request->ajax()) {
             return response()->json(['error' => $error]);

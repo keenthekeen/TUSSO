@@ -17,7 +17,8 @@
     "doctrine/dbal": "^2.5",
     "graylog2/gelf-php": "^1.5",
     "nesbot/carbon": "^1.22",
-    "sentry/sentry-laravel": "^0.6.1"
+    "sentry/sentry-laravel": "^0.6.1",
+    "greggilbert/recaptcha": "^2.1"
   },
   "require-dev": {
     "fzaninotto/faker": "~1.4",

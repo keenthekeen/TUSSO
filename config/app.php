@@ -166,6 +166,7 @@ return [
 		Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
         
         Sentry\SentryLaravel\SentryLaravelServiceProvider::class,
+        Greggilbert\Recaptcha\RecaptchaServiceProvider::class,
 
 	],
 
@@ -215,6 +216,7 @@ return [
 
 		'Adldap' => Adldap\Laravel\Facades\Adldap::class,
         'Sentry' => Sentry\SentryLaravel\SentryFacade::class,
+        'Recaptcha' => Greggilbert\Recaptcha\Facades\Recaptcha::class,
 
 	],
 

@@ -66,6 +66,14 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
                 <input type="checkbox" id="rem" name="remember" value="true"/>
                 <label for="rem">{{ trans('messages.remember') }}</label>
             </div>
+            @if (\App\FailedLogin::captchaNeeded())
+                <?php Session::put('captcha_need', true); ?>
+                <div class="row">
+                    <div class="col s12">
+                        {!! Recaptcha::render([ 'lang' => App::getLocale() ]) !!}
+                    </div>
+                </div>
+            @endif
             <div class="row">
                 <div class="input-field col s12">
                     <button class="btn waves-effect waves-light red" type="submit" name="action" style="width:100%">
@@ -113,44 +121,44 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
             $(function () {
                 // Credential Management API (W3C draft, available in Chrome 51+, see http://w3c.github.io/webappsec-credential-management/)
                 navigator.credentials.get({"password": true}).then(
-                        function (credential) {
-                            if (!credential) {
-                                // The user either doesn’t have credentials for this site, or refused to share them. Insert some code here to show a basic
-                                // login form (or, ideally, do nothing, since this API should really be progressive enhancement on top of an existing form).
-                                return;
-                            }
-                            if (credential.type == "password") {
-                                // It's not possible for JavaScript on the website to retrieve a raw password
-                                var myHeaders = new Headers({
-                                    "X-CSRF-TOKEN": $('input[name=_token]').val(),
-                                    "X-Requested-With": 'XMLHttpRequest'
-                                });
-                                fetch("/login?redirect_queue=" + encodeURIComponent($("#iRedir").val()) + "&mac=" + encodeURIComponent($("#iMac").val()), {
-                                    credentials: credential,
-                                    method: "POST",
-                                    headers: myHeaders
-                                })
-                                        .then(function (response) {
-                                            var contentType = response.headers.get("content-type");
-                                            if (contentType && contentType.indexOf("application/json") !== -1) {
-                                                return response.json().then(function (json) {
-                                                    // process JSON
-                                                    if (json.error != undefined) {
-                                                        $("error-message").text(json.error).slideDown();
-                                                    } else if (json.redirect != undefined) {
-                                                        window.location.assign(json.redirect);
-                                                    } else {
-                                                        $("error-message").text("Unexpected error occured! (JSO)").slideDown();
-                                                    }
-                                                });
+                    function (credential) {
+                        if (!credential) {
+                            // The user either doesn’t have credentials for this site, or refused to share them. Insert some code here to show a basic
+                            // login form (or, ideally, do nothing, since this API should really be progressive enhancement on top of an existing form).
+                            return;
+                        }
+                        if (credential.type == "password") {
+                            // It's not possible for JavaScript on the website to retrieve a raw password
+                            var myHeaders = new Headers({
+                                "X-CSRF-TOKEN": $('input[name=_token]').val(),
+                                "X-Requested-With": 'XMLHttpRequest'
+                            });
+                            fetch("/login?redirect_queue=" + encodeURIComponent($("#iRedir").val()) + "&mac=" + encodeURIComponent($("#iMac").val()), {
+                                credentials: credential,
+                                method: "POST",
+                                headers: myHeaders
+                            })
+                                .then(function (response) {
+                                    var contentType = response.headers.get("content-type");
+                                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                                        return response.json().then(function (json) {
+                                            // process JSON
+                                            if (json.error != undefined) {
+                                                $("error-message").text(json.error).slideDown();
+                                            } else if (json.redirect != undefined) {
+                                                window.location.assign(json.redirect);
                                             } else {
-                                                $("error-message").text("Unexpected error occured! (NJS)").slideDown();
+                                                $("error-message").text("Unexpected error occured! (JSO)").slideDown();
                                             }
                                         });
-                            } else {
-                                // Federated Sign-in or etc.
-                            }
-                        });
+                                    } else {
+                                        $("error-message").text("Unexpected error occured! (NJS)").slideDown();
+                                    }
+                                });
+                        } else {
+                            // Federated Sign-in or etc.
+                        }
+                    });
             });
         }
     </script>
