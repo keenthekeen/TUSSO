@@ -115,10 +115,6 @@ class TUSSOController extends Controller {
     private function returnLoginError(Request $request, $error) {
         FailedLogin::add($request->input('username'),self::getIPAddress($request));
         
-        if (FailedLogin::isFailOver(5)) {
-            // If the system is under brute-force attack, slow login attempt down.
-            sleep(2);
-        }
         if ($request->ajax()) {
             return response()->json(['error' => $error]);
         } else {
