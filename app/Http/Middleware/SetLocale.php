@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use \Illuminate\Http\Request;
+use \App\Http\Controllers\UIController;
 
 class SetLocale {
 	/**
@@ -15,7 +16,7 @@ class SetLocale {
 	 */
 	public function handle(Request $request, Closure $next) {
 
-		$locale = 'en';
+		$locale = 'th';
 
 		if ($request->session()->has('locale')) {
 			$locale = $request->session()->get('locale', 'th');
@@ -25,8 +26,7 @@ class SetLocale {
 			$locale = 'th';
 		}
 
-		$uic = new \App\Http\Controllers\UIController();
-		$uic->setLocale($locale);
+		UIController::setLocale($locale);
 
 		return $next($request);
 	}

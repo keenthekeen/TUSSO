@@ -13,19 +13,19 @@ class UIController extends Controller {
 			$setlang = 'th';
 		}
 
-		$this->setLanguage($request, $setlang);
+		self::setLanguage($request, $setlang);
 
 		//return $setlang;
 		return back()->with('notify', 'Language changed to ' . strtoupper($setlang) . '!');
 
 	}
 
-	private function setLanguage(Request $request, $lang) {
+	private static function setLanguage(Request $request, $lang) {
 		$request->session()->put('locale', $lang);
-		$this->setLocale($lang);
+		self::setLocale($lang);
 	}
 
-	public function setLocale($loc) {
+	public static function setLocale($loc) {
 		App::setLocale($loc);
 	}
 
@@ -65,7 +65,7 @@ class UIController extends Controller {
 	}
 
 	public function displayNewRegister(Request $request) {
-		$this->setLanguage($request, 'th');
+        self::setLanguage($request, 'th');
 
 		return view('newstudent');
 	}
