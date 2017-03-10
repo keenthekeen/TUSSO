@@ -117,9 +117,9 @@ class TUSSOController extends Controller {
     }
     
     private function returnLoginError(Request $request, $error) {
-        FailedLogin::add($request->input('username'),self::getIPAddress($request));
+        FailedLogin::add($request->input('username'), self::getIPAddress($request));
     
-        if (FailedLogin::isFailOver(5) AND !FailedLogin::captchaNeeded()) {
+        if (FailedLogin::ipAndUsernameFrequent(self::getIPAddress($request), $request->input('username')) AND !FailedLogin::captchaNeeded()) {
             // If the system is suspected brute-force attack but captcha is not deployed, slow login attempt down.
             sleep(2);
         }
