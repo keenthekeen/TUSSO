@@ -117,6 +117,7 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
             }, 300);
         });
 
+        @unless (\App\FailedLogin::captchaNeeded())
         if (navigator.credentials) {
             $(function () {
                 // Credential Management API (W3C draft, available in Chrome 51+, see http://w3c.github.io/webappsec-credential-management/)
@@ -161,5 +162,6 @@ $redirect = empty($redirect) ? session()->get('redirect_queue', '') : $redirect;
                     });
             });
         }
+        @endunless
     </script>
 @endsection
