@@ -1,5 +1,5 @@
 {
-  "name": "laravel/laravel",
+  "name": "keenthekeen/TUSSO",
   "description": "Triamudom Central Authentication Service",
   "keywords": [
     "auth",
@@ -9,7 +9,7 @@
   "license": "proprietary",
   "type": "project",
   "require": {
-    "php": ">=5.5.9",
+    "php": ">=7.0.0",
     "laravel/framework": "5.2.*",
     "adldap2/adldap2-laravel": "2.0.0",
     "lcobucci/jwt": "^3.1",

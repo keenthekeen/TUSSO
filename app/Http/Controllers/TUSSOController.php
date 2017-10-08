@@ -1,41 +1,51 @@
 <?php
+/*
+    TUSSO: Central Authentication Service Provider
+    Copyright (C) 2017 Siwat Techavoranant
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace App\Http\Controllers;
 
-use Adldap\Adldap;
 use Adldap\Exceptions\PasswordPolicyException;
 use Adldap\Exceptions\WrongPasswordException;
 use App\FailedLogin;
 use App\User;
+use Auth;
 use DB;
-use Illuminate\Http\Request;
 use Hash;
+use Illuminate\Http\Request;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\ValidationData;
 use Log;
-use Auth;
 use Validator;
 
+/**
+ * Class TUSSOController
+ * a HTTP controller that handle internal R/W operations
+ * @package App\Http\Controllers
+ */
 class TUSSOController extends Controller {
-    /*
-    |--------------------------------------------------------------------------
-    | TUSSO Controller
-    |--------------------------------------------------------------------------
-    | a HTTP controller that handle internal R/W operations
-    */
-    
-    /*
-    | TryLogIn()
-    |
-    | a method called when user submitted the login form
-    |
-    | @CallMethod Route
-    | @Input [String]username, [String]password
-    | @Output Redirection
-    |
-    */
+    /**
+     * a method called when user submitted the login form
+     *
+     * @param Request $request Request with username and password input
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
     public function TryLogIn(Request $request) {
         $this->validate($request, ['username' => 'required', 'password' => 'required']);
         if ($request->session()->get('captcha_need') == true) {
@@ -44,15 +54,13 @@ class TUSSOController extends Controller {
         $request->session()->put('captcha_need', false);
         
         if (config('tusso.use_ldap') && !(config('tusso.use_tuent') && strlen($request->input('username')) == 14 && (substr($request->input('username'), 0,
-                        1) == 'n' || substr($request->input('username'), 0, 1) == 'N') && is_numeric(substr($request->input('username'), 1, 13)))
-        ) {
+                        1) == 'n' || substr($request->input('username'), 0, 1) == 'N') && is_numeric(substr($request->input('username'), 1, 13)))) {
             try {
                 \Adldap::connect('default');
                 if (Auth::attempt([
                     'username' => $request->input('username'),
                     'password' => $request->input('password')
-                ], $request->has('remember'))
-                ) {
+                ], $request->has('remember'))) {
                     if ($this->cleanUserInfo()) {
                         Log::info(Auth::user()->username . ' logged in from ' . self::getIPAddress($request));
                     } else {
@@ -68,6 +76,7 @@ class TUSSOController extends Controller {
                     }
                 } else {
                     Log::debug('User has failed to log in. (' . $request->input('username') . ')', ['ip' => self::getIPAddress($request)]);
+    
                     return $this->returnLoginError($request, trans('messages.loginfail'));
                 }
             } catch (\Exception $e) {
@@ -87,63 +96,6 @@ class TUSSOController extends Controller {
         
     }
     
-    private function finishedLogin(Request $request) {
-        $request->session()->put('session_state', sha1('TUSSOSessionState:' . $request->user()->username . '-' . microtime()));
-        $request->session()->put('login_time', time());
-        if ($request->has('redirect_queue')) {
-            return $this->returnLoginSuccess($request, $request->input('redirect_queue'));
-        } elseif ($request->session()->has('redirect_queue')) {
-            $redirect = $request->session()->get('redirect_queue');
-            $request->session()->forget('redirect_queue');
-            
-            return $this->returnLoginSuccess($request, $redirect);
-        } else {
-            return $this->returnLoginSuccess($request, '/account');
-        }
-    }
-    
-    private function manualLogin($username, $password, Request $request) {
-        if ($user = User::find($username)) {
-            if (Hash::check($password, $user->password)) {
-                if (Auth::loginUsingId($user->username)) {
-                    Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . self::getIPAddress($request));
-                    
-                    return true;
-                }
-            }
-        }
-        
-        return false;
-    }
-    
-    private function returnLoginError(Request $request, $error) {
-        FailedLogin::add($request->input('username'), self::getIPAddress($request));
-    
-        if (FailedLogin::ipAndUsernameFrequent(self::getIPAddress($request), $request->input('username')) AND !FailedLogin::captchaNeeded()) {
-            // If the system is suspected brute-force attack but captcha is not deployed, slow login attempt down.
-            sleep(2);
-        }
-        
-        if ($request->ajax()) {
-            return response()->json(['error' => $error]);
-        } else {
-            return redirect('/login')->with('error_message', $error)->with('redirect_queue', $request->input('redirect_queue', ''));
-        }
-    }
-    
-    private function returnLoginSuccess(Request $request, $redirect) {
-        if ($request->ajax()) {
-            return response()->json(['redirect' => $redirect]);
-        } else {
-            return redirect($redirect)->with('notify', trans('messages.loginsuccess'));
-        }
-    }
-    
-    /*
-     * cleanUserInfo()
-     *
-     * generate user's information from LDAP data.
-     */
     private function cleanUserInfo() {
         $user = Auth::user();
         
@@ -173,6 +125,66 @@ class TUSSOController extends Controller {
         return true;
     }
     
+    public static function getIPAddress(Request $request) {
+        if ($request->ip() == '10.100.101.7' && isset($_SERVER['HTTP_X_REAL_IP'])) {
+            $ip = $_SERVER['HTTP_X_REAL_IP'];
+        } else {
+            $ip = $request->ip();
+        }
+        
+        return $ip;
+    }
+    
+    private function returnLoginError(Request $request, $error) {
+        FailedLogin::add($request->input('username'), self::getIPAddress($request));
+        
+        if (FailedLogin::ipAndUsernameFrequent(self::getIPAddress($request), $request->input('username')) AND !FailedLogin::captchaNeeded()) {
+            // If the system is suspected brute-force attack but captcha is not deployed, slow login attempt down.
+            sleep(2);
+        }
+        
+        if ($request->ajax()) {
+            return response()->json(['error' => $error]);
+        } else {
+            return redirect('/login')->with('error_message', $error)->with('redirect_queue', $request->input('redirect_queue', ''));
+        }
+    }
+    
+    private function manualLogin($username, $password, Request $request) {
+        if ($user = User::find($username)) {
+            if (Hash::check($password, $user->password)) {
+                if (Auth::loginUsingId($user->username)) {
+                    Log::notice(Auth::user()->username . ' logged in USING LOCAL DB from ' . self::getIPAddress($request));
+                    
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /*
+     * cleanUserInfo()
+     *
+     * generate user's information from LDAP data.
+     */
+    
+    private function finishedLogin(Request $request) {
+        $request->session()->put('session_state', sha1('TUSSOSessionState:' . $request->user()->username . '-' . microtime()));
+        $request->session()->put('login_time', time());
+        if ($request->has('redirect_queue')) {
+            return $this->returnLoginSuccess($request, $request->input('redirect_queue'));
+        } elseif ($request->session()->has('redirect_queue')) {
+            $redirect = $request->session()->get('redirect_queue');
+            $request->session()->forget('redirect_queue');
+            
+            return $this->returnLoginSuccess($request, $redirect);
+        } else {
+            return $this->returnLoginSuccess($request, '/account');
+        }
+    }
+    
     /*
      * newStudentLogin()
      *
@@ -182,6 +194,15 @@ class TUSSOController extends Controller {
      * // OBSOLETE Try to log user in using TUENT's database (for new student who doesn't have an account in directory)
      * // OBSOLETE This function expects "tuent_applicant" table containing fname,lname,nationalid,plan_id
      */
+    
+    private function returnLoginSuccess(Request $request, $redirect) {
+        if ($request->ajax()) {
+            return response()->json(['redirect' => $redirect]);
+        } else {
+            return redirect($redirect)->with('notify', trans('messages.loginsuccess'));
+        }
+    }
+    
     public function newStudentRegister(Request $request) {
         $validator = Validator::make($request->all(), [
             'fname' => 'required|max:50',
@@ -279,6 +300,15 @@ class TUSSOController extends Controller {
         }
     }
     
+    
+    /*
+     * proxyAuth()
+     *
+     * a method called from reverse proxy server to check whether user is authenticated
+     *
+     * @return HTTP Status 200 or 403
+     */
+
     public function adminLoginAs(Request $request) {
         $oldid = $request->user()->username;
         if (Auth::loginUsingId($request->input('user'))) {
@@ -290,14 +320,6 @@ class TUSSOController extends Controller {
         }
     }
     
-    
-    /*
-     * proxyAuth()
-     *
-     * a method called from reverse proxy server to check whether user is authenticated
-     *
-     * @return HTTP Status 200 or 403
-     */
     public function proxyAuth() {
         if (Auth::check()) {
             return response('AUTHENTICATED', 200)->header('X-AccessRight', 'TUSSO_GRANTED')->header('Access-Control-Allow-Origin', '*');
@@ -366,16 +388,6 @@ class TUSSOController extends Controller {
         } else {
             return response()->json(['error' => 'EMPTY_REQUEST'])->header('Access-Control-Allow-Origin', '*');
         }
-    }
-    
-    public static function getIPAddress(Request $request) {
-        if ($request->ip() == '10.100.101.7' && isset($_SERVER['HTTP_X_REAL_IP'])) {
-            $ip = $_SERVER['HTTP_X_REAL_IP'];
-        } else {
-            $ip = $request->ip();
-        }
-        
-        return $ip;
     }
     
 }

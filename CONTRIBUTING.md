@@ -3,9 +3,9 @@ This application should implement PHP/Laravel's built-in function, and comply wi
 ### PHP
 Contributors should follow PSR-2, the PHP coding style guideline, with the following exceptions:
 
-- You MUST use tabs for indenting instead of 4 spaces.
+- Use tabs for indenting instead of 4 spaces.
 - Opening braces for classes, methods, functions, or condition MUST go on the same line, and closing braces MUST go on the next line after the body.
-- Use single quote (') instead of double quote (") which is slower, also, to easily insert HTML as string without confusion.
+- Use single quote (') instead of double quote (") to easily insert HTML as string without confusion.
 
 
 ### HTML

@@ -13,54 +13,6 @@
 
 @section('content')
     <div class="z-depth-1 card-panel" style="max-width:800px;margin:auto">
-        <form>
-            {{ csrf_field() }}
-            <div class="row">
-                <div class="input-field col s12 center">
-                    <h4 class="center login-form-text">User Search</h4>
-                </div>
-            </div>
-            <div class="row" style="display: none" id="errorw">
-                <ul class="collection white-text">
-                    <li class="collection-item red darken-1" id="errorm"></li>
-                </ul>
-            </div>
-            <div class="row margin">
-                <div class="input-field col s12 m4">
-                    <select name="type">
-                        <option value="id">ID</option>
-                        <option value="lastname">Last name</option>
-                    </select>
-                    <label>Search type</label>
-                </div>
-                <div class="input-field col s12 m8">
-                    <input id="search" type="text" name="search" class="validate" autofocus />
-                    <label for="search">Keyword</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s12" id="button-div">
-                    <button class="btn waves-effect waves-light blue" type="submit" name="action" id="fSubmit"
-                            style="width:100%">
-                        {{ trans('messages.proceed') }}
-                    </button>
-                </div>
-            </div>
-        </form>
-        @if(Request::has('type') && Request::has('search'))
-            <br />
-            <?php
-            $fetch = json_decode(file_get_contents(config('tusso.turs').'/student/'. ((Request::input('type') == 'id') ? 'id/'.Request::input('search').'?' : 'search/'.Request::input('type').'?value='.Request::input('search').'&').'access_token='.\App\Http\Controllers\ProviderController::issueAccessToken('sso.local.triamudom.ac.th', ['openid', 'student', 'citizenid', 'searchstudent', 'studentdetail'], '*')));
-            if (is_array($fetch) AND count($fetch) === 1) {
-                $fetching = json_decode(file_get_contents(config('tusso.turs').'/student/id/'.$fetch[0]->studentid.'?access_token='.\App\Http\Controllers\ProviderController::issueAccessToken('sso.local.triamudom.ac.th', ['openid', 'student', 'citizenid', 'studentdetail'], '*')));
-                if (!empty($fetching)) {
-                    $fetch = $fetching;
-                }
-            }
-            dump($fetch);
-            ?><br />
-            @endif
-        <br />
         <form method="POST" action="/admin/loginas">
             {{ csrf_field() }}
             <div class="row margin">
@@ -76,10 +28,10 @@
                 </div>
             </div>
         </form>
-        <br />
+        <br/>
         @if (!\App\Http\Controllers\UIController::isGraylog())
             <a class="btn waves-effect waves-light cyan" href="/log">View logs</a>
-            @endif
+        @endif
     </div>
 
 @endsection
